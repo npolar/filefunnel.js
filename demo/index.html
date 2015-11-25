@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+
+		<link rel="stylesheet" href="css/filefunnel.min.css">
+
+		<script src="js/filefunnel.min.js"></script>
+		<script src="js/filefunnel-i18n.min.js"></script>
+	</head>
+
+	<body>
+		<div></div>
+
+		<script>
+			new FileFunnel("div", {
+				server: "http://localhost:3751",
+				multiple: true,
+				accept: "*/*",
+				chunked: true
+			});
+		</script>
+	</body>
+</html>
