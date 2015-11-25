@@ -1,0 +1,29 @@
+(function() {
+	"use strict";
+
+	FileFunnel.i18n.nb_NO = {
+		// Button labels
+		cancel:     "Avbryt",
+		reset:      "Tilbakestill",
+		upload:     "Last opp",
+
+		// Size indicators
+		bytes:      " bytes",
+		gibiBytes:  " GiB",
+		kibiBytes:  " KiB",
+		mebiBytes:  " MiB",
+
+		// Placeholder texts
+		fileName:   "Filnavn",
+		fileSize:   "Filstørrelse",
+		fileType:   "Filtype",
+
+		// Status indicators
+		forbidden:  "Ikke autorisert for opplasting",
+		oversized:  "Filen er for stor for opplasting",
+		refused:    "Tilkobling nektet",
+		success:    "Opplasting gjennomført"
+	};
+
+	FileFunnel.i18n.no = FileFunnel.i18n.nb = FileFunnel.i18n.nb_NO;
+})();
