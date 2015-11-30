@@ -260,10 +260,10 @@
 		// Parse and merge options with defaults
 		this._options = parseOptions(options, {
 			accept:     "*/*",          // Semicolon-separated MIME types
+			chunked:    false,
 			chunkSize:  0x100000,       // Chunk byte size (1 MiB by default)
 			className:  "filefunnel",   // Dot-separated CSS class names
-			chunked:    false,
-			multiple:   true
+			multiple:   false
 		});
 
 		// Use locale specified in constructor options if specified, otherwise browser locale. Default locale as fallback
@@ -276,14 +276,20 @@
 		// Create DOM form and child elements
 		var elems = this.elements = {
 			form:           new Element("form[enctype=multipart/form-data]." + options.className, { appendTo: Element(selector) }),
-			fileInput:      new Element("input[type=file][accept=" + acceptTypes + "]" + multiAttrib),
+			browseButton:   new Element("input[type=button][value=" + (options.multiple ? i18n.browseMultiple : i18n.browse) + "].browse"),
+			fileInput:      new Element("input[type=file][accept=" + acceptTypes + "][hidden]" + multiAttrib),
 			fileList:       new Element("div.filelist"),
-			submitButton:   new Element("input[type=submit][value=" + i18n.upload + "][disabled]"),
-			resetButton:    new Element("input[type=reset][value=" + i18n.reset + "]")
+			submitButton:   new Element("input[type=submit][value=" + i18n.upload + "][disabled].submit"),
+			resetButton:    new Element("input[type=reset][value=" + i18n.reset + "].reset")
 		};
 
 		// Add child elements to form
-		elems.form.add([ elems.fileInput, elems.fileList, elems.submitButton, elems.resetButton ]);
+		elems.form.add([ elems.browseButton, elems.fileInput, elems.fileList, elems.submitButton, elems.resetButton ]);
+
+		// Enable file browsing using the browseButton proxy
+		elems.browseButton.on("click", function() {
+			elems.fileInput.dom.click();
+		});
 
 		// Handle chosen files
 		elems.fileInput.on("change", function(event) {
@@ -461,7 +467,7 @@
 		});
 	}
 
-	FileFunnel.VERSION = 0.13;
+	FileFunnel.VERSION = 0.14;
 
 	// Prototype methods
 	FileFunnel.prototype = {
@@ -480,26 +486,28 @@
 	FileFunnel.i18n = {
 		en_GB: {
 			// Button labels
-			cancel:     "Cancel",
-			reset:      "Reset",
-			upload:     "Upload",
+			browse:         "Choose file",
+			browseMultiple: "Choose files",
+			cancel:         "Cancel",
+			reset:          "Reset",
+			upload:         "Upload",
 
 			// Size indicators
-			bytes:      " bytes",
-			gibiBytes:  " GiB",
-			kibiBytes:  " KiB",
-			mebiBytes:  " MiB",
+			bytes:          " bytes",
+			gibiBytes:      " GiB",
+			kibiBytes:      " KiB",
+			mebiBytes:      " MiB",
 
 			// Placeholder texts
-			fileName:   "Filename",
-			fileSize:   "Filesize",
-			fileType:   "Filetype",
+			fileName:       "Filename",
+			fileSize:       "Filesize",
+			fileType:       "Filetype",
 
 			// Status indicators
-			forbidden:  "Unauthorised for upload",
-			oversized:  "File too big for upload",
-			refused:    "Connection refused",
-			success:    "Upload successful"
+			forbidden:      "Unauthorised for upload",
+			oversized:      "File too big for upload",
+			refused:        "Connection refused",
+			success:        "Upload successful"
 		}
 	};
 
