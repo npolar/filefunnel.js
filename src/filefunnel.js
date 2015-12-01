@@ -283,6 +283,7 @@
 
 		// Use locale specified in constructor options if specified, otherwise browser locale. Default locale as fallback
 		this.locale = (options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
+
 		this.build();
 	}
 
@@ -319,7 +320,18 @@
 			} else if(parent && parent.dom instanceof HTMLInputElement) {
 				elems.form.visible = false;
 				parent.parent.append((this._form = elems.form), parent);
-				parent.on("click", function() { this.show(); }, this);
+				parent.on("click", function() { this.toggle(); }, this);
+
+				// Close when clicking outside of widget
+				var that = this;
+				document.addEventListener("click", function(e, node) {
+					while((node = node ? node.parentNode : e.target)) {
+						if(node == that._form.dom || node == parent.dom) {
+							return;
+						}
+					}
+					that.hide();
+				});
 			} else if(parent) {
 				parent.append((this._form = elems.form));
 			}
@@ -400,7 +412,7 @@
 								file.elements.prog.value = bytesSent;
 							};
 
-							xhr.upload.onloadend = function() {
+							xhr.upload.onloadend = function(e) {
 								file.elements.prog.attrib("max", bytesTotal);
 								file.elements.prog.value = (bytesSent += chunk.size);
 
@@ -410,7 +422,7 @@
 									} else {
 										finalizeUpload(file);
 									}
-								} else {
+								} else if (e.total > 0) {
 									file.elements.info.classes.add("success");
 									file.elements.info.value = i18n.success;
 									finalizeUpload(file);
@@ -525,6 +537,9 @@
 		},
 		show: function() {
 			(this._form && (this._form.visible = true));
+		},
+		toggle: function () {
+			(this._form && (this._form.visible = !this._form.visible));
 		}
 	};
 

@@ -5,7 +5,7 @@
 
 		<link rel="stylesheet" href="css/filefunnel.min.css">
 		<title>FileFunnel demo</title>
-		<script src="js/filefunnel.min.js"></script>
+		<script src="/src/filefunnel.js"></script>
 		<script src="js/filefunnel-i18n.min.js"></script>
 	</head>
 
@@ -14,6 +14,19 @@
 
 		<script>
 			new FileFunnel("div", {
+				server: "http://localhost:3751",
+				multiple: true,
+				accept: "*/*",
+				chunked: true
+			});
+		</script>
+
+
+
+		<input type="text" filefunnel>
+
+		<script>
+			new FileFunnel("[filefunnel]", {
 				server: "http://localhost:3751",
 				multiple: true,
 				accept: "*/*",
