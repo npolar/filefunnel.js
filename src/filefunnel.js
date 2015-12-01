@@ -287,14 +287,14 @@
 		this.build();
 	}
 
-	FileFunnel.VERSION = 0.20;
+	FileFunnel.VERSION = 0.21;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 3, ABORTED: 4, ERROR: 5 };
 
 	// Prototype methods
 	FileFunnel.prototype = {
 		build: function() {
-			var files = this._files, i18n = this._i18n, options = this._options, parent = this._parent;
+			var self = this, files = self._files, i18n = self._i18n, options = self._options, parent = self._parent;
 			var acceptTypes = ("string" == typeof options.accept ? options.accept : "*/*");
 			var multiAttrib = (true === options.multiple ? "[multiple]" : "");
 
@@ -315,25 +315,34 @@
 			elems.form.add([ elems.browseButton, elems.fileInput, elems.fileList, elems.submitButton, elems.resetButton ]);
 
 			// Add form element to DOM
-			if(this._form && this._form.parent) {
-				form.parent.replace((this._form = elems.form), this._form);
+			if(self._form && self._form.parent) {
+				// Replace existing form if available
+				form.parent.replace((self._form = elems.form), self._form);
 			} else if(parent && parent.dom instanceof HTMLInputElement) {
+				// Create a hidden-by-default widget for HTMLInputElement parents
 				elems.form.visible = false;
-				parent.parent.append((this._form = elems.form), parent);
-				parent.on("click", function() { this.toggle(); }, this);
+				parent.parent.append((self._form = elems.form), parent);
+
+				// Open widget when parent input element is clicked
+				parent.on("click", function() {
+					self.toggle();
+				});
 
 				// Close when clicking outside of widget
-				var that = this;
 				document.addEventListener("click", function(e, node) {
-					while((node = node ? node.parentNode : e.target)) {
-						if(node == that._form.dom || node == parent.dom) {
-							return;
+					if(self._form.visible) {
+						while((node = (node ? node.parentNode : e.target))) {
+							if(node == self._form.dom || node == parent.dom) {
+								return;
+							}
 						}
+
+						self.hide();
 					}
-					that.hide();
 				});
 			} else if(parent) {
-				parent.append((this._form = elems.form));
+				// Append to (container) element for other parent types
+				parent.append((self._form = elems.form));
 			}
 
 			// Enable file browsing using the browseButton proxy
@@ -375,7 +384,6 @@
 
 			// Handle form submit
 			elems.form.on("submit", function(event) {
-				var self = this;
 				event.preventDefault();
 
 				elems.fileInput.enabled = elems.submitButton.enabled = false;
@@ -422,7 +430,7 @@
 									} else {
 										finalizeUpload(file);
 									}
-								} else if (e.total > 0) {
+								} else if(e.total > 0) {
 									file.elements.info.classes.add("success");
 									file.elements.info.value = i18n.success;
 									finalizeUpload(file);
@@ -525,6 +533,7 @@
 		},
 		hide: function() {
 			(this._form && (this._form.visible = false));
+			return this;
 		},
 		get locale() {
 			return this._i18n;
@@ -537,9 +546,11 @@
 		},
 		show: function() {
 			(this._form && (this._form.visible = true));
+			return this;
 		},
 		toggle: function () {
 			(this._form && (this._form.visible = !this._form.visible));
+			return this;
 		}
 	};
 
