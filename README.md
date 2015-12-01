@@ -2,15 +2,23 @@
 File Upload JavaScript Widget
 
 ## Usage:
-FileFunnel is added to HTML containers by creating a new instance of *FileFunnel* using a CSS selector string as the first parameter, and optionally a map of settings as the secondd parameter:
+FileFunnel is added to HTML elements by creating a new instance of **FileFunnel** using a CSS selector string as the first parameter, and optionally a map of settings as the secondd parameter. If the target element is a *HTMLInputElement*, FileFunnel will be added as a widget (only visible on demand), otherwise FileFunnel will act as a permanent application added to the target element:
 
 ```javascript
 // Append FileFunnel with specified settings to the first div element found
 new FileFunnel("div", {
   accept: "image/png, image/jpeg",    // Accept PNG and JPEG images only
   chunked: true,                      // Enable chunked uploading
+  locale: "en_US",                    // Use american english as locale
   multiple: true,                     // Enable upload of multiple files
-  server: "https://localhost:3751"    // Upload to the specified server
+  server: "https://localhost:3751"    // Server backend accepting files
+});
+
+// Add FileFunnel as a widget to the first input element with a 'filefunnel' attribute
+new FileFunnel("input[filefunnel]" {
+  autoResize: true,                   // Enable automatic resizing of the widget
+  chunked: true,                      // Enable chunked uploading
+  server: "https://localhost:3751"    // Server backed accepting files
 });
 ```
 
@@ -18,6 +26,7 @@ new FileFunnel("div", {
 Key               | Value                                                     | Default
 ------------------|-----------------------------------------------------------|-------------------------
 **accept**        | Comma-separated list of acceptable MIME types             | *&#42;/&#42; (any type)*
+**autoResize**    | Enable automatic widget resizing based on parent width    | *true*
 **chunked**       | Enable chunked uploading                                  | *false*
 **chunkSize**     | Chunk byte size for chunked uploading                     | *1048576 (1 MiB)*
 **className**     | Dot-separated CSS class names added to form               | *.filefunnel*
