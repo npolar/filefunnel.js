@@ -274,8 +274,9 @@
 
 		// Parse and merge options with defaults
 		this._options = parseOptions(options, {
-			accept:     "*/*",          // Semicolon-separated MIME types
-			chunked:    false,
+			accept:     "*/*",          // Comma-separated MIME types
+			autoResize: true,           // Enable automatic widget resizing
+			chunked:    false,          // Enable chunked uploading
 			chunkSize:  0x100000,       // Chunk byte size (1 MiB by default)
 			className:  "filefunnel",   // Dot-separated CSS class names
 			multiple:   false           // Enable upload of multiple files
@@ -287,7 +288,7 @@
 		this.build();
 	}
 
-	FileFunnel.VERSION = 0.21;
+	FileFunnel.VERSION = 0.22;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 3, ABORTED: 4, ERROR: 5 };
 
@@ -320,8 +321,8 @@
 				form.parent.replace((self._form = elems.form), self._form);
 			} else if(parent && parent.dom instanceof HTMLInputElement) {
 				// Create a hidden-by-default widget for HTMLInputElement parents
-				elems.form.visible = false;
 				parent.parent.append((self._form = elems.form), parent);
+				self.hide().resize();
 
 				// Open widget when parent input element is clicked
 				parent.on("click", function() {
@@ -339,6 +340,11 @@
 
 						self.hide();
 					}
+				});
+
+				// Enable auto-resizing if applicable
+				window.addEventListener("resize", function() {
+					(true === options.autoResize && self.resize());
 				});
 			} else if(parent) {
 				// Append to (container) element for other parent types
@@ -530,6 +536,8 @@
 				elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.reset;
 			});
+
+			return this;
 		},
 		hide: function() {
 			(this._form && (this._form.visible = false));
@@ -543,6 +551,10 @@
 				this._i18n = FileFunnel.i18n[value];
 				// TODO: Locale hotswap
 			}
+		},
+		resize: function(width) {
+			(this._form && this._parent && (this._form.dom.style.width = (isNaN((width = Number(width))) ? this._parent.dom.offsetWidth : width) + "px"));
+			return this;
 		},
 		show: function() {
 			(this._form && (this._form.visible = true));
