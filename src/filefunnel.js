@@ -274,8 +274,9 @@
 
 		// Parse and merge options with defaults
 		this._options = parseOptions(options, {
-			accept:     "*/*",          // Semicolon-separated MIME types
-			chunked:    false,
+			accept:     "*/*",          // Comma-separated MIME types
+			autoResize: true,           // Enable automatic widget resizing
+			chunked:    false,          // Enable chunked uploading
 			chunkSize:  0x100000,       // Chunk byte size (1 MiB by default)
 			className:  "filefunnel",   // Dot-separated CSS class names
 			multiple:   false           // Enable upload of multiple files
@@ -287,14 +288,14 @@
 		this.build();
 	}
 
-	FileFunnel.VERSION = 0.20;
+	FileFunnel.VERSION = 0.22;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 3, ABORTED: 4, ERROR: 5 };
 
 	// Prototype methods
 	FileFunnel.prototype = {
 		build: function() {
-			var files = this._files, i18n = this._i18n, options = this._options, parent = this._parent;
+			var self = this, files = self._files, i18n = self._i18n, options = self._options, parent = self._parent;
 			var acceptTypes = ("string" == typeof options.accept ? options.accept : "*/*");
 			var multiAttrib = (true === options.multiple ? "[multiple]" : "");
 
@@ -315,26 +316,38 @@
 			elems.form.add([ elems.browseButton, elems.fileInput, elems.fileList, elems.submitButton, elems.resetButton ]);
 
 			// Add form element to DOM
-			if(this._form && this._form.parent) {
-				form.parent.replace((this._form = elems.form), this._form);
+			if(self._form && self._form.parent) {
+				// Replace existing form if available
+				form.parent.replace((self._form = elems.form), self._form);
 			} else if(parent && parent.dom instanceof HTMLInputElement) {
-				elems.form.visible = false;
+				// Create a hidden-by-default widget for HTMLInputElement parents
+				parent.parent.append((self._form = elems.form), parent);
+				self.hide().resize();
 				elems.form.classes.add("ff-input");
-				parent.parent.append((this._form = elems.form), parent);
-				parent.on("click", function() { this.toggle(); }, this);
+
+				// Open widget when parent input element is clicked
+				parent.on("click", function() {
+					self.toggle();
+				});
 
 				// Close when clicking outside of widget
-				var that = this;
 				document.addEventListener("click", function(e, node) {
-					while((node = node ? node.parentNode : e.target)) {
-						if(node == that._form.dom || node == parent.dom) {
-							return;
+					if(self._form.visible) {
+						while((node = (node ? node.parentNode : e.target))) {
+							if(node == self._form.dom || node == parent.dom) {
+								return;
+							}
 						}
 					}
-					that.hide();
+				});
+
+				// Enable auto-resizing if applicable
+				window.addEventListener("resize", function() {
+					(true === options.autoResize && self.resize());
 				});
 			} else if(parent) {
-				parent.append((this._form = elems.form));
+				// Append to (container) element for other parent types
+				parent.append((self._form = elems.form));
 			}
 
 			// Enable file browsing using the browseButton proxy
@@ -376,7 +389,6 @@
 
 			// Handle form submit
 			elems.form.on("submit", function(event) {
-				var self = this;
 				event.preventDefault();
 
 				elems.fileInput.enabled = elems.submitButton.enabled = false;
@@ -523,9 +535,12 @@
 				elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.reset;
 			});
+
+			return this;
 		},
 		hide: function() {
 			(this._form && (this._form.visible = false));
+			return this;
 		},
 		get locale() {
 			return this._i18n;
@@ -536,11 +551,17 @@
 				// TODO: Locale hotswap
 			}
 		},
+		resize: function(width) {
+			(this._form && this._parent && (this._form.dom.style.width = (isNaN((width = Number(width))) ? this._parent.dom.offsetWidth : width) + "px"));
+			return this;
+		},
 		show: function() {
 			(this._form && (this._form.visible = true));
+			return this;
 		},
 		toggle: function () {
 			(this._form && (this._form.visible = !this._form.visible));
+			return this;
 		}
 	};
 
