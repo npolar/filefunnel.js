@@ -319,6 +319,7 @@
 				form.parent.replace((this._form = elems.form), this._form);
 			} else if(parent && parent.dom instanceof HTMLInputElement) {
 				elems.form.visible = false;
+				elems.form.classes.add("ff-input");
 				parent.parent.append((this._form = elems.form), parent);
 				parent.on("click", function() { this.toggle(); }, this);
 
