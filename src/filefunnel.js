@@ -266,13 +266,11 @@
 	};
 
 	function FileFunnel(selector, options) {
-		this._form    = null;
-		this._i18n    = FileFunnel.i18n.en_GB;
-		this._parent  = Element(selector);
-		this._status  = FileFunnel.status.READY;
-		this._success = function () {};
-		this._error = function () {};
-		this._progress = function () {};
+		this._callbacks = {};
+		this._elements  = {};
+		this._i18n      = FileFunnel.i18n.en_GB;
+		this._parent    = Element(selector);
+		this._status    = FileFunnel.status.READY;
 
 		// Parse and merge options with defaults
 		this._options = parseOptions(options, {
@@ -295,24 +293,21 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.30;
+	FileFunnel.VERSION = 0.40;
 
-	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 3, ABORTED: 4, ERROR: 5 };
+	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
 	// Prototype methods
 	FileFunnel.prototype = {
 		browse: function() {
-			if(this._elements) {
-				this._elements.fileInput.dom.click();
-			}
+			(this._elements.fileInput && this._elements.fileInput.dom.click());
 		},
 		build: function() {
 			var self = this, files = self.files, i18n = self._i18n, options = self._options, parent = self._parent;
 			var acceptTypes = ("string" == typeof options.accept ? options.accept : "*/*");
-			var multiAttrib = (true === options.multiple ? "[multiple]" : "");
 
 			// Create DOM form and child elements
-			var elems = this._elements = {
+			var elems = {
 				form:           new Element("form[enctype=multipart/form-data][method=POST]." + options.className),
 				browseButton:   new Element("input[type=button][value=" + (options.multiple ? i18n.browseMultiple : i18n.browse) + "].browse"),
 				fileInput:      new Element("input[type=file][accept=" + acceptTypes + "][hidden][multiple]"),
@@ -321,22 +316,28 @@
 				resetButton:    new Element("input[type=reset][value=" + i18n.reset + "].reset")
 			};
 
+			// Create localized map of predefined status codes
+			var statusTexts = {
+				401: i18n.forbidden,
+				403: i18n.forbidden,
+				413: i18n.oversized
+			};
+
 			// Disable multi file upload if not explicitly defined in options
 			(true !== options.multiple && elems.fileInput.dom.removeAttribute("multiple"));
 
 			// Add child elements to form
 			elems.form.add([ elems.browseButton, elems.fileInput, elems.fileList, elems.submitButton, elems.resetButton ]);
 
-			// Add form element to DOM (if not hidden)
+			// Add form element to DOM if parent exists
 			if(parent) {
-				if(self._form && self._form.parent) {
+				if(self._elements.form && self._elements.form.parent) {
 					// Replace existing form if available
-					form.parent.replace((self._form = elems.form), self._form);
-				} else if(parent && parent.dom instanceof HTMLInputElement) {
+					self._elements.form.parent.replace(elems.form, self._elements.form);
+				} else if(parent.dom instanceof HTMLInputElement) {
 					// Create a hidden-by-default widget for HTMLInputElement parents
-					parent.parent.append((self._form = elems.form), parent);
+					parent.parent.append(elems.form, parent);
 					self.hide().resize();
-					elems.form.classes.add("ff-input");
 
 					// Open widget when parent input element is clicked
 					parent.on("click", function() {
@@ -345,12 +346,13 @@
 
 					// Close when clicking outside of widget
 					document.addEventListener("click", function(e, node) {
-						if(self._form.visible) {
+						if(elems.form.visible) {
 							while((node = (node ? node.parentNode : e.target))) {
-								if(node == self._form.dom || node == parent.dom) {
+								if(node == elems.form.dom || node == parent.dom) {
 									return;
 								}
 							}
+
 							self.hide();
 						}
 					});
@@ -359,13 +361,14 @@
 					window.addEventListener("resize", function() {
 						(true === options.autoResize && self.resize());
 					});
-				} else if(parent) {
+				} else {
 					// Append to (container) element for other parent types
-					parent.append((self._form = elems.form));
+					parent.append(elems.form);
 				}
-			} else {
-				self._form = elems.form;
 			}
+
+			// Update internal _elements property with new elements
+			self._elements = elems;
 
 			// Enable file browsing using the browseButton proxy
 			elems.browseButton.on("click", function() {
@@ -398,14 +401,19 @@
 					);
 
 					files.push({
-						elements: fileItemElems,
-						status: FileFunnel.status.READY,
-						reference: file,
-						xhr: null
+						elements:   fileItemElems,
+						location:   null,
+						reference:  file,
+						status:     FileFunnel.status.READY,
+
+						get progress() {
+							return (FileFunnel.status.UPLOADING == this.status ? Math.round((this.elements.prog.value / this.elements.prog.max) * 100) : NaN);
+						}
 					});
 				});
 
-				// Enable/Disable the upload button
+				// Set status to READY, and enable/disable the upload button
+				self._status = FileFunnel.status.READY;
 				elems.submitButton.enabled = event.target.files.length;
 			});
 
@@ -417,17 +425,7 @@
 				elems.resetButton.value = i18n.cancel;
 				self._status = FileFunnel.status.UPLOADING;
 
-				function progress(file) {
-					return Math.round((file.elements.prog.value / file.elements.prog.attrib("max")) * 100);
-				}
-
 				function finalizeUpload(file) {
-					file.status = FileFunnel.status.COMPLETED;
-
-					if(file.xhr && file.xhr.status == 201) {
-						file.location = self.options.server + xhr.getResponseHeader("Content-Location");
-					}
-
 					for(var f in files) {
 						if(FileFunnel.status.COMPLETED != files[f].status) {
 							return;
@@ -439,79 +437,117 @@
 					self._status = FileFunnel.status.COMPLETED;
 				}
 
+				function xhrRequestEnded(file) {
+					switch(file.status) {
+						case FileFunnel.status.READY:
+						case FileFunnel.status.UPLOADING:
+						case FileFunnel.status.COMPLETED:
+						case FileFunnel.status.ABORTED:
+						case FileFunnel.status.FAILED:
+					}
+				}
+
 				if(options.chunked) {
 					var chunkSize = ("number" == typeof options.chunkSize ? options.chunkSize: 0x100000);
 
 					files.forEach(function(file) {
-						var bytesSent = 0, bytesTotal = file.reference.size;
-						var fileName = file.elements.name.value;
+						var bytesSent = 0, bytesTotal = file.reference.size, fileName = file.elements.name.value;
 
 						var sendNextChunk = function() {
 							var chunk = file.reference.slice(bytesSent, Math.min(bytesTotal, bytesSent + chunkSize) + 1, file.reference.type);
-							var xhr = file.xhr = new XMLHttpRequest();
+							var xhr = new XMLHttpRequest();
 
-							xhr.upload.onloadstart = function(e) {
+							// Chunked upload start callback
+							xhr.onloadstart = function(e) {
+								file.status = FileFunnel.status.UPLOADING;
 								file.elements.prog.attrib("max", bytesTotal + (e.lengthComputable ? e.total : 0));
 								file.elements.prog.value = bytesSent;
-								self._progress(progress(file));
+
+								// Run start callback if defined
+								("function" == typeof self._callbacks.start && self._callbacks.start(file));
 							};
 
-							xhr.upload.onloadend = function(e) {
-								file.elements.prog.attrib("max", bytesTotal);
-								file.elements.prog.value = (bytesSent += chunk.size);
-
-								if(bytesSent < bytesTotal) {
-									if("function" == typeof sendNextChunk) {
-										sendNextChunk();
-									} else {
-										finalizeUpload(file);
-									}
-								} else if (e.total > 0) {
-									file.elements.info.classes.add("success");
-									file.elements.info.value = i18n.success;
-									finalizeUpload(file);
-									self._success(file);
-								}
-							};
-
+							// Chunked upload progress callback
 							xhr.upload.onprogress = function(e) {
 								(e.lengthComputable && (file.elements.prog.value = bytesSent + e.loaded));
-								self._progress(progress(file));
+
+								// Run progress callback if defined
+								("function" == typeof self._callbacks.progress && self._callbacks.progress(file));
 							};
 
-							xhr.onreadystatechange = function(e) {
-								if(e.target.status >= 400) {
-									self._status = FileFunnel.status.ERROR;
-									file.elements.prog.attrib("max", (file.elements.prog.value = 0));
-									file.elements.info.classes.add("error");
-									sendNextChunk = null;
-									finalizeUpload(file);
+							// Chunked upload success callback
+							xhr.onload = function(e) {
+								var status = e.target.status;
 
-									// Decide error message from status code (fallback to status text)
-									switch(e.target.status) {
-										case 401: case 403:
-											file.elements.info.value = i18n.forbidden;
-											break;
+								// Success handling
+								if(200 <= status && 300 < status) {
+									file.elements.prog.attrib("max", bytesTotal);
+									file.elements.prog.value = (bytesSent += chunk.size);
 
-										case 413:
-											file.elements.info.value = i18n.oversized;
-											break;
-
-										default:
-											file.elements.info.value = e.target.statusText;
+									// Send next chunk if available
+									if(bytesSent < bytesTotal) {
+										return ("function" == typeof sendNextChunk && sendNextChunk());
 									}
-									self._error(e);
+
+									file.status = FileFunnel.status.COMPLETED;
+									file.elements.info.classes.add("success");
+									file.elements.info.value = i18n.success;
+
+									// Set file location if status code is 201 (created)
+									if(201 == status) {
+										file.location = xhr.getResponseHeader("Content-Location") || null;
+									}
+
+									// Run success callback if defined
+									("function" == typeof self._callbacks.success && self._callbacks.success(file));
 								}
+
+								// Error handling
+								else if(400 <= status) {
+									file.status = FileFunnel.status.FAILED;
+									file.elements.info.classes.add("error");
+									file.elements.info.value = statusTexts[status] || i18n.failed;
+
+									// Run error callback if defined
+									("function" == typeof self._callbacks.error && self._callbacks.error(file));
+								}
+
+								finalizeUpload(file);
 							};
 
-							xhr.onerror = function(e) {
-								self._status = FileFunnel.status.ERROR;
-								file.elements.prog.attrib("max", (file.elements.prog.value = 0));
+							// Chunked upload abort callback
+							xhr.onabort = function() {
+								file.status = FileFunnel.status.ABORTED;
+								file.elements.info.value = i18n.aborted;
+
+								// Run abort callback if defined
+								("function" == typeof self._callbacks.abort && self._callbacks.abort(file));
+
+								finalizeUpload(file);
+							};
+
+							// Chunked upload timeout callback
+							xhr.ontimeout = function() {
+								file.status = FileFunnel.status.FAILED;
+								file.elements.info.classes.add("error");
+								file.elements.info.value = i18n.timeout;
+
+								// Run error callback if defined
+								("function" == typeof self._callbacks.error && self._callbacks.error(file));
+
+								finalizeUpload(file);
+							};
+
+							// Chunked upload error callback
+							xhr.onerror = function() {
+								file.status = FileFunnel.status.FAILED;
 								file.elements.info.classes.add("error");
 								file.elements.info.value = i18n.refused;
-								sendNextChunk = null;
+
+								// Run error callback if defined
+								("function" == typeof self._callbacks.error && self._callbacks.error(file));
+
 								finalizeUpload(file);
-								self._error(e);
 							};
 
 							xhr.open("POST", options.server, true);
@@ -529,29 +565,85 @@
 				} else {
 					var xhr = files.xhr = new XMLHttpRequest(), formData = new FormData();
 
-					xhr.onreadystatechange = function(e) {
-						if(e.target.status >= 200 && e.target.status < 300) {
-							files.forEach(function(file) {
-								self._status = FileFunnel.status.COMPLETED;
+					// Form upload start callback
+					xhr.onloadstart = function(e) {
+						files.forEach(function(file) {
+							file.status = FileFunnel.status.UPLOADING;
+
+							// Run start callback if defined
+							("function" == typeof self._callbacks.start && self._callbacks.start(file));
+						});
+					};
+
+					// Form upload success callback
+					xhr.onload = function(e) {
+						var status = e.target.status;
+
+						files.forEach(function(file) {
+							// Success handling
+							if(200 <= status && 300 < status) {
 								file.elements.prog.attrib("max", e.total || 1);
 								file.elements.prog.attrib("value", e.loaded || 1);
 								file.elements.info.classes.add("success");
 								file.elements.info.value = i18n.success;
-								finalizeUpload(file);
-								self._success(file);
-							});
-						}
-					};
 
-					xhr.onerror = function(e) {
-						files.forEach(function(file) {
-							self._status = FileFunnel.status.ERROR;
-							file.elements.prog.attrib("max", (file.elements.prog.value = 0));
-							file.elements.info.classes.add("error");
-							file.elements.info.value = i18n.refused;
+								// Run success callback if defined
+								("function" == typeof self._callbacks.success && self._callbacks.success(file));
+							}
+
+							// Error handling
+							else if(400 <= status) {
+								file.status = FileFunnel.status.FAILED;
+								file.elements.info.classes.add("error");
+								file.elements.info.value = statusTexts[status] || i18n.failed;
+
+								// Run error callback if defined
+								("function" == typeof self._callbacks.error && self._callbacks.error(file));
+							}
+
 							finalizeUpload(file);
 						});
-						self._error(e);
+					};
+
+					// Form upload abort callback
+					xhr.onabort = function() {
+						files.forEach(function(file) {
+							file.status = FileFunnel.status.ABORTED;
+							file.elements.info.value = i18n.aborted;
+
+							// Run abort callback if defined
+							("function" == typeof self._callbacks.abort && self._callbacks.abort(file));
+
+							finalizeUpload(file);
+						})
+					};
+
+					// Form upload timeout callback
+					xhr.ontimeout = function() {
+						files.forEach(function(file) {
+							file.status = FileFunnel.status.FAILED;
+							file.elements.info.classes.add("error");
+							file.elements.info.value = i18n.timeout;
+
+							// Run error callback if defined
+							("function" == typeof self._callbacks.error && self._callbacks.error(file));
+
+							finalizeUpload(file);
+						});
+					};
+
+					// Form upload error callback
+					xhr.onerror = function(e) {
+						files.forEach(function(file) {
+							file.status = FileFunnel.status.FAILED;
+							file.elements.info.classes.add("error");
+							file.elements.info.value = i18n.refused;
+
+							// Run error callback if defined
+							("function" == typeof self._callbacks.error && self._callbacks.error(file));
+
+							finalizeUpload(file);
+						});
 					};
 
 					files.forEach(function(file) {
@@ -576,7 +668,7 @@
 			return this;
 		},
 		hide: function() {
-			(this._form && (this._form.visible = false));
+			(this._elements.form && (this._elements.form.visible = false));
 			return this;
 		},
 		get locale() {
@@ -588,25 +680,31 @@
 				// TODO: Locale hotswap
 			}
 		},
+		on: function(event, callback) {
+			// Validate event name, or throw exception
+			if(-1 == [ "start", "progress", "success", "abort", "error" ].indexOf(event)) {
+				throw "Unrecognized FileFunnel event: " + event;
+			}
+
+			// Add event callback if valid function, otherwise unset
+			this._callbacks[event] = ("function" == typeof callback ? callback : null);
+
+			return this;
+		},
 		resize: function(width) {
-			(this._form && this._parent && (this._form.dom.style.width = (isNaN((width = Number(width))) ? this._parent.dom.offsetWidth : width) + "px"));
+			(this._elements.form && this._parent && (this._elements.form.dom.style.width = (isNaN((width = Number(width))) ? this._parent.dom.offsetWidth : width) + "px"));
 			return this;
 		},
 		show: function() {
-			(this._form && (this._form.visible = true));
+			(this._elements.form && (this._elements.form.visible = true));
 			return this;
 		},
 		toggle: function () {
-			(this._form && (this._form.visible = !this._form.visible));
+			(this._elements.form && (this._elements.form.visible = !this._elements.form.visible));
 			return this;
 		},
 		upload: function(success, error, progress) {
-			if(this._elements) {
-				this._success = success || this._success;
-				this._error = error || this._error;
-				this._progress = progress || this._progress;
-				this._elements.submitButton.dom.click();
-			}
+			(this._elements.submitButton && this._elements.submitButton.dom.click());
 		}
 	};
 
@@ -633,10 +731,13 @@
 			fileType:       "Filetype",
 
 			// Status indicators
+			aborted:        "Upload aborted",
+			failed:         "Upload failed",
 			forbidden:      "Unauthorised for upload",
 			oversized:      "File too big for upload",
 			refused:        "Connection refused",
-			success:        "Upload successful"
+			success:        "Upload successful",
+			timeout:        "Upload timed out"
 		}
 	};
 
