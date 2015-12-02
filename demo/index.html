@@ -11,27 +11,20 @@
 
 	<body>
 		<div></div>
-
-		<script>
-			new FileFunnel("div", {
-				server: "http://localhost:3751",
-				multiple: true,
-				accept: "*/*",
-				chunked: true
-			});
-		</script>
-
-
-
 		<input type="text" filefunnel>
 
 		<script>
-			new FileFunnel("[filefunnel]", {
-				server: "http://localhost:3751",
+			new FileFunnel("div", {
 				accept: "*/*",
+				chunked: true,
 				multiple: true,
-				
-				chunked: true
+				server: "http://localhost:3751"
+			});
+
+			new FileFunnel("[filefunnel]", {
+				accept: "image/*",
+				chunked: true,
+				server: "http://localhost:3751"
 			});
 		</script>
 	</body>
