@@ -1,3 +1,8 @@
+.filefunnel {
+  box-shadow: 2px 2px 2px 1px #888;
+  min-width: 600px;
+}
+
 .filefunnel fieldset {
   border: none;
 }
@@ -22,11 +27,6 @@
 
 .filefunnel .success {
   color: rgb(10, 130, 22);
-}
-
-.ff-input {
-  box-shadow: 2px 2px 2px 1px #888888;
-  min-width: 600px;
 }
 
 .filefunnel .size,
