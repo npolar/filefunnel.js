@@ -1,0 +1,36 @@
+.filefunnel fieldset {
+  border: none;
+}
+
+.filefunnel legend {
+  display: none;
+}
+
+.filefunnel input[type="button"],
+.filefunnel input[type="reset"],
+.filefunnel input[type="submit"] {
+  margin: 5px;
+}
+
+.filefunnel .info {
+  margin-left: 5px;
+}
+
+.filefunnel .error {
+  color: rgb(156, 24, 24);
+}
+
+.filefunnel .success {
+  color: rgb(10, 130, 22);
+}
+
+.ff-input {
+  box-shadow: 2px 2px 2px 1px #888888;
+  min-width: 600px;
+}
+
+.filefunnel .size,
+.filefunnel .type {
+  width: 90px;
+  text-overflow: ellipsis;
+}

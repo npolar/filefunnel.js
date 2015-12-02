@@ -338,6 +338,7 @@
 								return;
 							}
 						}
+						self.hide();
 					}
 				});
 
