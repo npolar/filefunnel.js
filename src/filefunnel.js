@@ -266,11 +266,13 @@
 	};
 
 	function FileFunnel(selector, options) {
-		this._files   = [];
 		this._form    = null;
 		this._i18n    = FileFunnel.i18n.en_GB;
 		this._parent  = Element(selector);
 		this._status  = FileFunnel.status.READY;
+		this._success = function () {};
+		this._error = function () {};
+		this._progress = function () {};
 
 		// Parse and merge options with defaults
 		this._options = parseOptions(options, {
@@ -285,23 +287,33 @@
 		// Use locale specified in constructor options if specified, otherwise browser locale. Default locale as fallback
 		this.locale = (options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
 
+		// Array of files for upload
+		this.files  = [];
+
 		this.build();
+
+		return this;
 	}
 
-	FileFunnel.VERSION = 0.22;
+	FileFunnel.VERSION = 0.30;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 3, ABORTED: 4, ERROR: 5 };
 
 	// Prototype methods
 	FileFunnel.prototype = {
+		browse: function() {
+			if(this._elements) {
+				this._elements.fileInput.dom.click();
+			}
+		},
 		build: function() {
-			var self = this, files = self._files, i18n = self._i18n, options = self._options, parent = self._parent;
+			var self = this, files = self.files, i18n = self._i18n, options = self._options, parent = self._parent;
 			var acceptTypes = ("string" == typeof options.accept ? options.accept : "*/*");
 			var multiAttrib = (true === options.multiple ? "[multiple]" : "");
 
 			// Create DOM form and child elements
-			var elems = {
-				form:           new Element("form[enctype=multipart/form-data]." + options.className),
+			var elems = this._elements = {
+				form:           new Element("form[enctype=multipart/form-data][method=POST]." + options.className),
 				browseButton:   new Element("input[type=button][value=" + (options.multiple ? i18n.browseMultiple : i18n.browse) + "].browse"),
 				fileInput:      new Element("input[type=file][accept=" + acceptTypes + "][hidden][multiple]"),
 				fileList:       new Element("div.filelist"),
@@ -315,40 +327,44 @@
 			// Add child elements to form
 			elems.form.add([ elems.browseButton, elems.fileInput, elems.fileList, elems.submitButton, elems.resetButton ]);
 
-			// Add form element to DOM
-			if(self._form && self._form.parent) {
-				// Replace existing form if available
-				form.parent.replace((self._form = elems.form), self._form);
-			} else if(parent && parent.dom instanceof HTMLInputElement) {
-				// Create a hidden-by-default widget for HTMLInputElement parents
-				parent.parent.append((self._form = elems.form), parent);
-				self.hide().resize();
-				elems.form.classes.add("ff-input");
+			// Add form element to DOM (if not hidden)
+			if(parent) {
+				if(self._form && self._form.parent) {
+					// Replace existing form if available
+					form.parent.replace((self._form = elems.form), self._form);
+				} else if(parent && parent.dom instanceof HTMLInputElement) {
+					// Create a hidden-by-default widget for HTMLInputElement parents
+					parent.parent.append((self._form = elems.form), parent);
+					self.hide().resize();
+					elems.form.classes.add("ff-input");
 
-				// Open widget when parent input element is clicked
-				parent.on("click", function() {
-					self.toggle();
-				});
+					// Open widget when parent input element is clicked
+					parent.on("click", function() {
+						self.toggle();
+					});
 
-				// Close when clicking outside of widget
-				document.addEventListener("click", function(e, node) {
-					if(self._form.visible) {
-						while((node = (node ? node.parentNode : e.target))) {
-							if(node == self._form.dom || node == parent.dom) {
-								return;
+					// Close when clicking outside of widget
+					document.addEventListener("click", function(e, node) {
+						if(self._form.visible) {
+							while((node = (node ? node.parentNode : e.target))) {
+								if(node == self._form.dom || node == parent.dom) {
+									return;
+								}
 							}
+							self.hide();
 						}
-						self.hide();
-					}
-				});
+					});
 
-				// Enable auto-resizing if applicable
-				window.addEventListener("resize", function() {
-					(true === options.autoResize && self.resize());
-				});
-			} else if(parent) {
-				// Append to (container) element for other parent types
-				parent.append((self._form = elems.form));
+					// Enable auto-resizing if applicable
+					window.addEventListener("resize", function() {
+						(true === options.autoResize && self.resize());
+					});
+				} else if(parent) {
+					// Append to (container) element for other parent types
+					parent.append((self._form = elems.form));
+				}
+			} else {
+				self._form = elems.form;
 			}
 
 			// Enable file browsing using the browseButton proxy
@@ -381,7 +397,12 @@
 						.append((fileItemElems.info = new Element("span.info")))
 					);
 
-					files.push({ elements: fileItemElems, finished: false, reference: file, xhr: null });
+					files.push({
+						elements: fileItemElems,
+						status: FileFunnel.status.READY,
+						reference: file,
+						xhr: null
+					});
 				});
 
 				// Enable/Disable the upload button
@@ -396,11 +417,19 @@
 				elems.resetButton.value = i18n.cancel;
 				self._status = FileFunnel.status.UPLOADING;
 
+				function progress(file) {
+					return Math.round((file.elements.prog.value / file.elements.prog.attrib("max")) * 100);
+				}
+
 				function finalizeUpload(file) {
-					file.finished = true;
+					file.status = FileFunnel.status.COMPLETED;
+
+					if(file.xhr && file.xhr.status == 201) {
+						file.location = self.options.server + xhr.getResponseHeader("Content-Location");
+					}
 
 					for(var f in files) {
-						if(!files[f].finished) {
+						if(FileFunnel.status.COMPLETED != files[f].status) {
 							return;
 						}
 					}
@@ -424,6 +453,7 @@
 							xhr.upload.onloadstart = function(e) {
 								file.elements.prog.attrib("max", bytesTotal + (e.lengthComputable ? e.total : 0));
 								file.elements.prog.value = bytesSent;
+								self._progress(progress(file));
 							};
 
 							xhr.upload.onloadend = function(e) {
@@ -440,11 +470,13 @@
 									file.elements.info.classes.add("success");
 									file.elements.info.value = i18n.success;
 									finalizeUpload(file);
+									self._success(file);
 								}
 							};
 
 							xhr.upload.onprogress = function(e) {
 								(e.lengthComputable && (file.elements.prog.value = bytesSent + e.loaded));
+								self._progress(progress(file));
 							};
 
 							xhr.onreadystatechange = function(e) {
@@ -468,16 +500,18 @@
 										default:
 											file.elements.info.value = e.target.statusText;
 									}
+									self._error(e);
 								}
 							};
 
-							xhr.onerror = function() {
+							xhr.onerror = function(e) {
 								self._status = FileFunnel.status.ERROR;
 								file.elements.prog.attrib("max", (file.elements.prog.value = 0));
 								file.elements.info.classes.add("error");
 								file.elements.info.value = i18n.refused;
 								sendNextChunk = null;
 								finalizeUpload(file);
+								self._error(e);
 							};
 
 							xhr.open("POST", options.server, true);
@@ -504,6 +538,7 @@
 								file.elements.info.classes.add("success");
 								file.elements.info.value = i18n.success;
 								finalizeUpload(file);
+								self._success(file);
 							});
 						}
 					};
@@ -516,6 +551,7 @@
 							file.elements.info.value = i18n.refused;
 							finalizeUpload(file);
 						});
+						self._error(e);
 					};
 
 					files.forEach(function(file) {
@@ -563,6 +599,14 @@
 		toggle: function () {
 			(this._form && (this._form.visible = !this._form.visible));
 			return this;
+		},
+		upload: function(success, error, progress) {
+			if(this._elements) {
+				this._success = success || this._success;
+				this._error = error || this._error;
+				this._progress = progress || this._progress;
+				this._elements.submitButton.dom.click();
+			}
 		}
 	};
 
