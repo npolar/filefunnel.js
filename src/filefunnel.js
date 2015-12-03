@@ -292,7 +292,7 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.43;
+	FileFunnel.VERSION = 0.44;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -407,6 +407,7 @@
 						elements:   fileItemElems,
 						location:   null,
 						reference:  file,
+						response:   null,
 						status:     FileFunnel.status.READY,
 
 						get progress() {
@@ -503,6 +504,7 @@
 									// Set file location if status code is 201 (created)
 									if(201 == status) {
 										file.location = xhr.getResponseHeader("Content-Location") || null;
+										file.response = xhr.responseText || null;
 									}
 
 									// Run success callback if defined
