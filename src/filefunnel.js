@@ -294,7 +294,7 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.45;
+	FileFunnel.VERSION = 0.46;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -437,7 +437,7 @@
 
 				function finalizeUpload(file) {
 					for(var f in files) {
-						if(FileFunnel.status.COMPLETED != files[f].status) {
+						if(FileFunnel.status.UPLOADING == files[f].status) {
 							return;
 						}
 					}
@@ -445,16 +445,6 @@
 					elems.fileInput.enabled = true;
 					elems.resetButton.value = i18n.reset;
 					self.status = FileFunnel.status.COMPLETED;
-				}
-
-				function xhrRequestEnded(file) {
-					switch(file.status) {
-						case FileFunnel.status.READY:
-						case FileFunnel.status.UPLOADING:
-						case FileFunnel.status.COMPLETED:
-						case FileFunnel.status.ABORTED:
-						case FileFunnel.status.FAILED:
-					}
 				}
 
 				if(options.chunked) {
@@ -502,6 +492,7 @@
 									file.status = FileFunnel.status.COMPLETED;
 									file.elements.info.classes.add("success");
 									file.elements.info.value = i18n.success;
+									finalizeUpload(file);
 
 									// Set file location if status code is 201 (created)
 									if(201 == status) {
@@ -518,23 +509,21 @@
 									file.status = FileFunnel.status.FAILED;
 									file.elements.info.classes.add("error");
 									file.elements.info.value = statusTexts[status] || i18n.failed;
+									finalizeUpload(file);
 
 									// Run error callback if defined
 									("function" == typeof self._callbacks.error && self._callbacks.error(file));
 								}
-
-								finalizeUpload(file);
 							};
 
 							// Chunked upload abort callback
 							xhr.onabort = function() {
 								file.status = FileFunnel.status.ABORTED;
 								file.elements.info.value = i18n.aborted;
+								finalizeUpload(file);
 
 								// Run abort callback if defined
 								("function" == typeof self._callbacks.abort && self._callbacks.abort(file));
-
-								finalizeUpload(file);
 							};
 
 							// Chunked upload timeout callback
@@ -542,11 +531,10 @@
 								file.status = FileFunnel.status.FAILED;
 								file.elements.info.classes.add("error");
 								file.elements.info.value = i18n.timeout;
+								finalizeUpload(file);
 
 								// Run error callback if defined
 								("function" == typeof self._callbacks.error && self._callbacks.error(file));
-
-								finalizeUpload(file);
 							};
 
 							// Chunked upload error callback
@@ -554,11 +542,10 @@
 								file.status = FileFunnel.status.FAILED;
 								file.elements.info.classes.add("error");
 								file.elements.info.value = i18n.refused;
+								finalizeUpload(file);
 
 								// Run error callback if defined
 								("function" == typeof self._callbacks.error && self._callbacks.error(file));
-
-								finalizeUpload(file);
 							};
 
 							xhr.open("POST", options.server, true);
@@ -597,6 +584,7 @@
 								file.elements.prog.attrib("value", e.loaded || 1);
 								file.elements.info.classes.add("success");
 								file.elements.info.value = i18n.success;
+								finalizeUpload(file);
 
 								// Run success callback if defined
 								("function" == typeof self._callbacks.success && self._callbacks.success(file));
@@ -607,12 +595,11 @@
 								file.status = FileFunnel.status.FAILED;
 								file.elements.info.classes.add("error");
 								file.elements.info.value = statusTexts[status] || i18n.failed;
+								finalizeUpload(file);
 
 								// Run error callback if defined
 								("function" == typeof self._callbacks.error && self._callbacks.error(file));
 							}
-
-							finalizeUpload(file);
 						});
 					};
 
@@ -621,11 +608,10 @@
 						files.forEach(function(file) {
 							file.status = FileFunnel.status.ABORTED;
 							file.elements.info.value = i18n.aborted;
+							finalizeUpload(file);
 
 							// Run abort callback if defined
 							("function" == typeof self._callbacks.abort && self._callbacks.abort(file));
-
-							finalizeUpload(file);
 						})
 					};
 
@@ -635,11 +621,10 @@
 							file.status = FileFunnel.status.FAILED;
 							file.elements.info.classes.add("error");
 							file.elements.info.value = i18n.timeout;
+							finalizeUpload(file);
 
 							// Run error callback if defined
 							("function" == typeof self._callbacks.error && self._callbacks.error(file));
-
-							finalizeUpload(file);
 						});
 					};
 
@@ -649,11 +634,10 @@
 							file.status = FileFunnel.status.FAILED;
 							file.elements.info.classes.add("error");
 							file.elements.info.value = i18n.refused;
+							finalizeUpload(file);
 
 							// Run error callback if defined
 							("function" == typeof self._callbacks.error && self._callbacks.error(file));
-
-							finalizeUpload(file);
 						});
 					};
 
