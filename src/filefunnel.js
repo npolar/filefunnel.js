@@ -426,11 +426,11 @@
 			// Handle form submit
 			elems.form.on("submit", function(e) {
 				e.preventDefault();
-				this.upload();
+				self.upload();
 			});
 
 			// Redefine upload function
-			this.upload = function() {
+			self.upload = function() {
 				elems.fileInput.enabled = elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.cancel;
 				self.status = FileFunnel.status.UPLOADING;
