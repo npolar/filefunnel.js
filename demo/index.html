@@ -7,23 +7,102 @@
 		<title>FileFunnel demo</title>
 		<script src="/src/filefunnel.js"></script>
 		<script src="js/filefunnel-i18n.min.js"></script>
+
+		<style>
+			#demoTable th,
+			#demoTable td
+			{
+				padding: 5px;
+			}
+
+			#demoTable td > input
+			{
+				box-sizing: border-box;
+				width: 100%;
+			}
+		</style>
 	</head>
 
 	<body>
-		<div></div>
-		<input type="text" filefunnel>
+		<table id="demoTable">
+			<thead>
+				<tr>
+					<th>Multiple, form-data</th>
+					<th>Multiple, chunked</th>
+					<th>Single, form-data</th>
+					<th>Single, chunked</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td id="multipleFormData"></td>
+					<td id="multipleChunked"></td>
+					<td id="singleFormData"></td>
+					<td id="singleChunked"></td>
+				</tr>
+				<tr>
+					<td><input type="text" id="multipleFormDataWidget"></td>
+					<td><input type="text" id="multipleChunkedWidget"></td>
+					<td><input type="text" id="singleFormDataWidget"></td>
+					<td><input type="text" id="singleChunkedWidget"></td>
+				</tr>
+			</tbody>
+		</table>
 
 		<script>
-			new FileFunnel("div", {
+			new FileFunnel("#multipleFormData", {
+				accept: "*/*",
+				chunked: false,
+				multiple: true,
+				server: "http://localhost:3751"
+			});
+
+			new FileFunnel("#multipleChunked", {
 				accept: "*/*",
 				chunked: true,
 				multiple: true,
 				server: "http://localhost:3751"
 			});
 
-			new FileFunnel("[filefunnel]", {
-				accept: "image/*",
+			new FileFunnel("#singleFormData", {
+				accept: "*/*",
+				chunked: false,
+				multiple: false,
+				server: "http://localhost:3751"
+			});
+
+			new FileFunnel("#singleChunked", {
+				accept: "*/*",
 				chunked: true,
+				multiple: false,
+				server: "http://localhost:3751"
+			});
+
+			new FileFunnel("#multipleFormDataWidget", {
+				accept: "*/*",
+				chunked: true,
+				multiple: true,
+				server: "http://localhost:3751"
+			});
+
+			new FileFunnel("#multipleChunkedWidget", {
+				accept: "*/*",
+				chunked: true,
+				multiple: true,
+				server: "http://localhost:3751"
+			});
+
+			new FileFunnel("#singleFormDataWidget", {
+				accept: "*/*",
+				chunked: true,
+				multiple: false,
+				server: "http://localhost:3751"
+			});
+
+			new FileFunnel("#singleChunkedWidget", {
+				accept: "*/*",
+				chunked: true,
+				multiple: false,
 				server: "http://localhost:3751"
 			});
 		</script>
