@@ -293,7 +293,7 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.41;
+	FileFunnel.VERSION = 0.42;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -337,6 +337,7 @@
 				} else if(parent.dom instanceof HTMLInputElement) {
 					// Create a hidden-by-default widget for HTMLInputElement parents
 					parent.parent.append(elems.form, parent);
+					elems.form.classes.add("widget");
 
 					// Hide and resize widget
 					self._elements = elems;
@@ -706,7 +707,7 @@
 			(this._elements.form && (this._elements.form.visible = !this._elements.form.visible));
 			return this;
 		},
-		upload: function(success, error, progress) {
+		upload: function() {
 			(this._elements.submitButton && this._elements.submitButton.dom.click());
 		}
 	};
@@ -754,3 +755,4 @@
 
 	return FileFunnel;
 }());
+
