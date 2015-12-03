@@ -487,7 +487,7 @@
 								var status = e.target.status;
 
 								// Success handling
-								if(200 <= status && 300 < status) {
+								if(200 <= status && 300 > status) {
 									file.elements.prog.attrib("max", bytesTotal);
 									file.elements.prog.value = (bytesSent += chunk.size);
 
