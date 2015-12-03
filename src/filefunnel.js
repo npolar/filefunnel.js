@@ -282,18 +282,17 @@
 			multiple:   false           // Enable upload of multiple files
 		});
 
-		// Use locale specified in constructor options if specified, otherwise browser locale. Default locale as fallback
-		this.locale = (options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
-
 		// Array of files for upload
 		this.files  = [];
 
-		this.build();
+		// Use locale specified in constructor options if specified, otherwise browser locale. Default locale as fallback
+		this.locale = (options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
 
+		this.build();
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.42;
+	FileFunnel.VERSION = 0.43;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -422,9 +421,13 @@
 			});
 
 			// Handle form submit
-			elems.form.on("submit", function(event) {
-				event.preventDefault();
+			elems.form.on("submit", function(e) {
+				e.preventDefault();
+				this.upload();
+			});
 
+			// Redefine upload function
+			this.upload = function() {
 				elems.fileInput.enabled = elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.cancel;
 				self._status = FileFunnel.status.UPLOADING;
@@ -658,7 +661,7 @@
 					xhr.open("POST", options.server, true);
 					xhr.send(formData);
 				}
-			});
+			};
 
 			// Handle form reset
 			elems.form.on("reset", function() {
@@ -676,12 +679,17 @@
 			return this;
 		},
 		get locale() {
-			return this._i18n;
+			for(var code in FileFunnel.i18n) {
+				if(this._i18n == FileFunnel.i18n[code]) {
+					return code;
+				}
+			}
+
+			return undefined;
 		},
 		set locale(value) {
 			if(FileFunnel.i18n[value] && (FileFunnel.i18n[value] !== this._i18n)) {
 				this._i18n = FileFunnel.i18n[value];
-				// TODO: Locale hotswap
 			}
 		},
 		on: function(event, callback) {
@@ -708,7 +716,7 @@
 			return this;
 		},
 		upload: function() {
-			(this._elements.submitButton && this._elements.submitButton.dom.click());
+			// Overwritten by build-method
 		}
 	};
 
