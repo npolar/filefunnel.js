@@ -34,6 +34,29 @@ Key               | Value                                                     | 
 **multiple**      | Enable support for multiple files                         | *false*
 **server**        | URI to server backend receiving the uploaded files        | *null*
 
+#### Methods:
+Method     | Parameters              | Description
+-----------|-------------------------|-------------------------------------------------------------------------
+**browse** | *none*                  | Show the file selection dialogue
+**build**  | *none*                  | Rebuild the form with new settings
+**hide**   | *none*                  | Hide the form/widget
+**on**     | **event**, **callback** | Add/replace **callback** function to specified **event**
+**resize** | **width**               | Resize the form to given **width** (or parent width if no width is specified)
+**show**   | *none*                  | Show the form/widget
+**toggle** | *none*                  | Toggle form/widget visibility
+**upload** | *none*                  | Start uploading of previously selected files
+
+#### Events:
+The following is a list of events which can trigger a callback function added by the **on** method:
+
+Event name   | Description
+-------------|------------------------------------------------------
+**abort**    | Triggered when the upload was aborted by the user
+**error**    | Triggered when any errors occur during upload
+**progress** | Triggered when a file upload progresses
+**start**    | Triggered when the upload was initialised by the user
+**success**  | Triggered when a file was successfully uploaded
+
 #### Locale settings:
 By default, only the **en_GB** locale is included, but all available translations can be enabled by including the [filefunnel-i18n.min.js](https://github.com/npolar/filefunnel.js/tree/master/dist/js/filefunnel-i18n.min.js) file. Unless otherwise specified, the browser locale will be used if the translation exists, otherwise **en_GB** is used as a fallback.
 
