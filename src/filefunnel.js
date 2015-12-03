@@ -270,7 +270,6 @@
 		this._elements  = {};
 		this._i18n      = FileFunnel.i18n.en_GB;
 		this._parent    = Element(selector);
-		this._status    = FileFunnel.status.READY;
 
 		// Parse and merge options with defaults
 		this._options = parseOptions(options, {
@@ -288,11 +287,14 @@
 		// Use locale specified in constructor options if specified, otherwise browser locale. Default locale as fallback
 		this.locale = (options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
 
+		// Current status
+		this.status = FileFunnel.status.READY;
+
 		this.build();
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.44;
+	FileFunnel.VERSION = 0.45;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -417,7 +419,7 @@
 				});
 
 				// Set status to READY, and enable/disable the upload button
-				self._status = FileFunnel.status.READY;
+				self.status = FileFunnel.status.READY;
 				elems.submitButton.enabled = event.target.files.length;
 			});
 
@@ -431,7 +433,7 @@
 			this.upload = function() {
 				elems.fileInput.enabled = elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.cancel;
-				self._status = FileFunnel.status.UPLOADING;
+				self.status = FileFunnel.status.UPLOADING;
 
 				function finalizeUpload(file) {
 					for(var f in files) {
@@ -442,7 +444,7 @@
 
 					elems.fileInput.enabled = true;
 					elems.resetButton.value = i18n.reset;
-					self._status = FileFunnel.status.COMPLETED;
+					self.status = FileFunnel.status.COMPLETED;
 				}
 
 				function xhrRequestEnded(file) {
