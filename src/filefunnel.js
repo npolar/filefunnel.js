@@ -294,7 +294,7 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.46;
+	FileFunnel.VERSION = 0.47;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -579,7 +579,7 @@
 
 						files.forEach(function(file) {
 							// Success handling
-							if(200 <= status && 300 < status) {
+							if(200 <= status && 300 > status) {
 								file.elements.prog.attrib("max", e.total || 1);
 								file.elements.prog.attrib("value", e.loaded || 1);
 								file.elements.info.classes.add("success");
