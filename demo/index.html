@@ -13,6 +13,7 @@
 			#demoTable td
 			{
 				padding: 5px;
+				vertical-align: top;
 			}
 
 			#demoTable td > input
@@ -80,7 +81,7 @@
 
 			new FileFunnel("#multipleFormDataWidget", {
 				accept: "*/*",
-				chunked: true,
+				chunked: false,
 				multiple: true,
 				server: "http://localhost:3751"
 			});
@@ -94,7 +95,7 @@
 
 			new FileFunnel("#singleFormDataWidget", {
 				accept: "*/*",
-				chunked: true,
+				chunked: false,
 				multiple: false,
 				server: "http://localhost:3751"
 			});
@@ -104,7 +105,13 @@
 				chunked: true,
 				multiple: false,
 				server: "http://localhost:3751"
+			})
+			.on("success", function(file) {
+				if(file.location) {
+					file.parent.element.value = file.parent.server + file.location;
+				}
 			});
+
 		</script>
 	</body>
 </html>
