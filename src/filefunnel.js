@@ -95,6 +95,33 @@
 		} else if((a = Element(options.insertBefore))) {
 			a.parent.insert(this, a);
 		}
+
+		// Add proxy functions to attribute map
+		var dom = this.dom, attribProxies = {
+			add: function() {
+				[].slice.call(arguments).forEach(function(arg) {
+					dom.setAttribute(arg, "");
+				});
+				return dom.attributes;
+			},
+			get: function(key) {
+				return dom.getAttribute(arg);
+			},
+			remove: function() {
+				[].slice.call(arguments).forEach(function(arg) {
+					dom.removeAttribute(arg);
+				});
+				return dom.attributes;
+			},
+			set: function(key, value) {
+				dom.setAttribute(key, value);
+				return dom.attributes;
+			}
+		};
+
+		for(var p in attribProxies) {
+			dom.attributes[p] = attribProxies[p];
+		}
 	}
 
 	Element.prototype = {
@@ -122,16 +149,8 @@
 			(element instanceof Element && (element.parent = this));
 			return this;
 		},
-		attrib: function(key, value) {
-			if("string" == typeof key) {
-				if(undefined !== value) {
-					this.dom.setAttribute(key, value);
-				} else {
-					return this.dom.getAttribute(key);
-				}
-			}
-
-			return value;
+		get attribs() {
+			return this.dom.attributes;
 		},
 		child: function(selector) {
 			if("string" == typeof selector) {
@@ -285,7 +304,7 @@
 		this.files  = [];
 
 		// Use locale specified in constructor options if specified, otherwise browser locale. Default locale as fallback
-		this.locale = (options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
+		this.locale = (this._options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
 
 		// Current status
 		this.status = FileFunnel.status.READY;
@@ -294,7 +313,7 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.48;
+	FileFunnel.VERSION = 0.49;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -411,6 +430,7 @@
 						reference:  file,
 						response:   null,
 						status:     FileFunnel.status.READY,
+						xhr:        null,
 
 						get progress() {
 							return (FileFunnel.status.UPLOADING == this.status ? Math.round((this.elements.prog.value / this.elements.prog.max) * 100) : NaN);
@@ -435,6 +455,19 @@
 				elems.resetButton.value = i18n.cancel;
 				self.status = FileFunnel.status.UPLOADING;
 
+				// Enable aborting ongoing uploads
+				elems.resetButton.on("click", function(e) {
+					e.preventDefault();
+
+					if(options.chunked) {
+						for(var f in files) {
+							(files[f].xhr instanceof XMLHttpRequest && files[f].xhr.abort());
+						}
+					} else {
+						(files.xhr instanceof XMLHttpRequest && files.xhr.abort());
+					}
+				});
+
 				function finalizeUpload(file) {
 					for(var f in files) {
 						if(FileFunnel.status.UPLOADING == files[f].status) {
@@ -443,6 +476,7 @@
 					}
 
 					elems.fileInput.enabled = true;
+					elems.resetButton.on("click", null);
 					elems.resetButton.value = i18n.reset;
 					self.status = FileFunnel.status.COMPLETED;
 				}
@@ -455,12 +489,12 @@
 
 						var sendNextChunk = function() {
 							var chunk = file.reference.slice(bytesSent, Math.min(bytesTotal, bytesSent + chunkSize) + 1, file.reference.type);
-							var xhr = new XMLHttpRequest();
+							var xhr = file.xhr = new XMLHttpRequest();
 
 							// Chunked upload start callback
 							xhr.onloadstart = function(e) {
 								file.status = FileFunnel.status.UPLOADING;
-								file.elements.prog.attrib("max", bytesTotal + (e.lengthComputable ? e.total : 0));
+								file.elements.prog.attribs.set("max", bytesTotal + (e.lengthComputable ? e.total : 0));
 								file.elements.prog.value = bytesSent;
 
 								// Run start callback if defined
@@ -481,7 +515,7 @@
 
 								// Success handling
 								if(200 <= status && 300 > status) {
-									file.elements.prog.attrib("max", bytesTotal);
+									file.elements.prog.attribs.set("max", bytesTotal);
 									file.elements.prog.value = (bytesSent += chunk.size);
 
 									// Send next chunk if available
@@ -557,7 +591,7 @@
 							xhr.send(chunk);
 						};
 
-						file.elements.prog.attrib("max", bytesTotal);
+						file.elements.prog.attribs.set("max", bytesTotal);
 						sendNextChunk();
 					});
 				} else {
@@ -567,6 +601,7 @@
 					xhr.onloadstart = function(e) {
 						files.forEach(function(file) {
 							file.status = FileFunnel.status.UPLOADING;
+							file.elements.prog.attribs.remove("max", "value");
 
 							// Run start callback if defined
 							("function" == typeof self._callbacks.start && self._callbacks.start(file));
@@ -580,10 +615,11 @@
 						files.forEach(function(file) {
 							// Success handling
 							if(200 <= status && 300 > status) {
-								file.elements.prog.attrib("max", e.total || 1);
-								file.elements.prog.attrib("value", e.loaded || 1);
+								file.status = FileFunnel.status.COMPLETED;
+								file.elements.prog.attribs.set("max", e.total || 1).set("value", e.loaded || 1);
 								file.elements.info.classes.add("success");
 								file.elements.info.value = i18n.success;
+								finalizeUpload(file);
 								finalizeUpload(file);
 
 								// Run success callback if defined
@@ -593,6 +629,7 @@
 							// Error handling
 							else if(400 <= status) {
 								file.status = FileFunnel.status.FAILED;
+								file.elements.prog.attribs.set("max", e.total || 1).set("value", e.loaded || 0);
 								file.elements.info.classes.add("error");
 								file.elements.info.value = statusTexts[status] || i18n.failed;
 								finalizeUpload(file);
@@ -607,6 +644,7 @@
 					xhr.onabort = function() {
 						files.forEach(function(file) {
 							file.status = FileFunnel.status.ABORTED;
+							file.elements.prog.attribs.set("max", 1).set("value", 0);
 							file.elements.info.value = i18n.aborted;
 							finalizeUpload(file);
 
@@ -619,6 +657,7 @@
 					xhr.ontimeout = function() {
 						files.forEach(function(file) {
 							file.status = FileFunnel.status.FAILED;
+							file.elements.prog.attribs.set("max", 1).set("value", 0);
 							file.elements.info.classes.add("error");
 							file.elements.info.value = i18n.timeout;
 							finalizeUpload(file);
@@ -632,6 +671,7 @@
 					xhr.onerror = function(e) {
 						files.forEach(function(file) {
 							file.status = FileFunnel.status.FAILED;
+							file.elements.prog.attribs.set("max", 1).set("value", 0);
 							file.elements.info.classes.add("error");
 							file.elements.info.value = i18n.refused;
 							finalizeUpload(file);
