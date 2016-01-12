@@ -313,7 +313,7 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.49;
+	FileFunnel.VERSION = 0.50;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -427,6 +427,7 @@
 					files.push({
 						elements:   fileItemElems,
 						location:   null,
+						parent:     self,
 						reference:  file,
 						response:   null,
 						status:     FileFunnel.status.READY,
@@ -620,7 +621,6 @@
 								file.elements.info.classes.add("success");
 								file.elements.info.value = i18n.success;
 								finalizeUpload(file);
-								finalizeUpload(file);
 
 								// Run success callback if defined
 								("function" == typeof self._callbacks.success && self._callbacks.success(file));
@@ -702,6 +702,9 @@
 
 			return this;
 		},
+		get element() {
+			return (this._parent ? this._parent.dom : null);
+		},
 		hide: function() {
 			(this._elements.form && (this._elements.form.visible = false));
 			return this;
@@ -738,6 +741,12 @@
 		resize: function(width) {
 			(this._elements.form && this._parent && (this._elements.form.dom.style.width = (isNaN((width = Number(width))) ? this._parent.dom.offsetWidth : width) + "px"));
 			return this;
+		},
+		get server() {
+			return ("string" == typeof this._options.server ? this._options.server : null);
+		},
+		set server(uri) {
+			return (this._options.server = ("string" == typeof uri ? uri : null));
 		},
 		show: function() {
 			(this._elements.form && (this._elements.form.visible = true));
