@@ -1,36 +1,112 @@
-.filefunnel {
-  box-shadow: 2px 2px 2px 1px #888;
-  min-width: 300px;
+.filefunnel
+{
+	box-shadow:     2px 2px 2px 1px #888;
+	box-sizing:     border-box;
+	min-width:      300px;
+	padding:        5px;
+	position:       relative;
 }
 
-.filefunnel fieldset {
-  border: none;
+.filefunnel .browse,
+.filefunnel .submit,
+.filefunnel .reset
+{
+	padding:        5px 15px;
 }
 
-.filefunnel legend {
-  display: none;
+.filefunnel .browse
+{
+	width:          100%;
 }
 
-.filefunnel input[type="button"],
-.filefunnel input[type="reset"],
-.filefunnel input[type="submit"] {
-  margin: 5px;
+.filefunnel .submit,
+.filefunnel .reset
+{
+	width:          50%;
 }
 
-.filefunnel .info {
-  margin-left: 5px;
+.filefunnel .filelist
+{
+	border:         1px solid #ccc;
+	margin:         5px 0;
+	overflow-y:     auto;
+	max-height:     160px;
 }
 
-.filefunnel .error {
-  color: rgb(156, 24, 24);
+.filefunnel .fileinfo
+{
+	border:         0;
+	margin:         0;
+	padding:        10px;
+	position:       relative;
 }
 
-.filefunnel .success {
-  color: rgb(10, 130, 22);
+.filefunnel .fileinfo:not(:last-child)
+{
+	border-bottom:  1px solid #ccc;
 }
 
-.filefunnel .size,
-.filefunnel .type {
-  width: 90px;
-  text-overflow: ellipsis;
+.filefunnel .fileinfo legend
+{
+	display:        none;
+}
+
+.filefunnel .fileinfo .name,
+.filefunnel .fileinfo .size,
+.filefunnel .fileinfo .type
+{
+	border:         1px solid #ccc;
+	box-sizing:     border-box;
+	padding:        5px;
+}
+
+.filefunnel .fileinfo .name
+{
+	width:          60%;
+}
+
+.filefunnel .fileinfo .size,
+.filefunnel .fileinfo .type
+{
+	border:         0;
+	background:     transparent;
+	font-size:      9px;
+	position:       absolute;
+	text-align:     center;
+	width:          40%;
+}
+
+.filefunnel .fileinfo .size
+{
+	top:            8px;
+}
+
+.filefunnel .fileinfo .type
+{
+	top:            16px;
+}
+
+.filefunnel .fileinfo .progress
+{
+	border:         0;
+	box-sizing:     border-box;
+	width:          100%;
+}
+
+.filefunnel .fileinfo .info
+{
+	display:        inline-block;
+	font-family:    monospace;
+	font-size:      .8em;
+	margin-top:     8px;
+}
+
+.filefunnel .fileinfo .info.error
+{
+	color:          #c00;
+}
+
+.filefunnel .fileinfo .info.success
+{
+	color:          #060;
 }
