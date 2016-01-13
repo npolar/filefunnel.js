@@ -313,7 +313,7 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.50;
+	FileFunnel.VERSION = 0.51;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
@@ -329,7 +329,7 @@
 			// Create DOM form and child elements
 			var elems = {
 				form:           new Element("form[enctype=multipart/form-data][method=POST]." + options.className),
-				browseButton:   new Element("input[type=button][value=" + (options.multiple ? i18n.browseMultiple : i18n.browse) + "].browse"),
+				browseButton:   new Element("input[type=button][value=" + (options.multiple ? i18n.add : i18n.browse) + "].browse"),
 				fileInput:      new Element("input[type=file][accept=" + acceptTypes + "][hidden][multiple]"),
 				fileList:       new Element("div.filelist"),
 				submitButton:   new Element("input[type=submit][value=" + i18n.upload + "][disabled].submit"),
@@ -401,12 +401,21 @@
 
 			// Handle chosen files
 			elems.fileInput.on("change", function(event) {
-				files.length = 0;
-				elems.fileList.clear();
-				elems.fileListItems = [];
+				// Clear file list if multiple files is not allowed
+				if(!options.multiple) {
+					files.length = 0;
+					elems.fileList.clear();
+				}
 
 				[].slice.call(event.target.files).forEach(function(file) {
-					var fileSize = file.size, fileModified = file.lastModifiedDate, fileItemElems = {};
+					var f, fileSize = file.size, fileModified = file.lastModifiedDate, fileItemElems = {};
+
+					// Ignore files that has already been added
+					for(f in files) {
+						if((f = files[f].reference).name == file.name && f.lastModifiedDate.valueOf() == fileModified.valueOf()) {
+							return;
+						}
+					}
 
 					// Round filesize and add correct suffix for gibis, mibis and kibis
 					fileSize = (fileSize >= 0x40000000 ? ((fileSize / 0x40000000).toFixed(2) + i18n.gibiBytes) :
@@ -452,7 +461,7 @@
 
 			// Redefine upload function
 			self.upload = function() {
-				elems.fileInput.enabled = elems.submitButton.enabled = false;
+				elems.browseButton.enabled = elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.cancel;
 				self.status = FileFunnel.status.UPLOADING;
 
@@ -476,7 +485,6 @@
 						}
 					}
 
-					elems.fileInput.enabled = true;
 					elems.resetButton.on("click", null);
 					elems.resetButton.value = i18n.reset;
 					self.status = FileFunnel.status.COMPLETED;
@@ -693,9 +701,9 @@
 
 			// Handle form reset
 			elems.form.on("reset", function() {
+				files.length = 0;
 				elems.fileList.clear();
-				elems.fileListItems = [];
-				elems.fileInput.enabled = true;
+				elems.browseButton.enabled = true;
 				elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.reset;
 			});
@@ -765,8 +773,8 @@
 	FileFunnel.i18n = {
 		en_GB: {
 			// Button labels
+			add:            "Add files",
 			browse:         "Choose file",
-			browseMultiple: "Choose files",
 			cancel:         "Cancel",
 			delete:         "Delete",
 			reset:          "Reset",
