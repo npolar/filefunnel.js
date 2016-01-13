@@ -94,8 +94,10 @@ The simplest form of backend implementation is achieved by supporting the **mult
 All files are then uploaded in the same request body, with the file name specified as the form field name.
 
 The following is a list of some limitations with this kind of upload:
- * No support for huge files, as the *total* acceptable size of *all files* is limited by the maximum request body length supported
+ * No support for huge files, as the *total* acceptable size of *all files* is limited by the maximum supported body length
  * Inaccurate progress bars, as there is no way of telling how many bytes of each file has been uploaded
+ * No support for status indicators on a per-file basis (i.e. individual success or failure indicators)
+ * No standardised feedback on resulting location of successfully uploaded files (i.e. *Content-Location* headers)
 
 #### Chunked upload:
 Adding support for chunked uploads is a bit more complicated than for form-data uploads, but gives a more accurate progress bar on individual files, and allows for bigger file sizes.
@@ -118,7 +120,15 @@ Code    | Status message        | Description
 **401** | *Unauthorized*        | Indicates that the user must be authenticated in order to upload
 **403** | *Forbidden*           | Indicates that the user does not have the sufficient rights to upload
 **412** | *Payload Too Large*   | Indicates that the file is too big to be accepted
-**413** | *Precondition Failed* | Indicates that the header described in the *Vary* headr is missing/erroneous
+**413** | *Precondition Failed* | Indicates that the header described in the *Vary* header is missing/erroneous
 
 All status codes in the **2xx**-range are treated as **success**, while codes in the **4xx** and **5xx** -ranges are treated as **errors**.
 Status codes in the **3xx**-range are currently not handled by the FileFunnel client.
+
+For *Cross-Origin Resource Sharing* (**CORS**) to work properly, the following headers must be set:
+
+Header                            | Value
+----------------------------------|----------------------------------------------------------
+**Access-Control-Allow-Headers**  | **Authorization, Content-Type, X-File-Name, X-File-Size**
+**Access-Control-Allow-Origin**   | **&#42;** *(or a list of accepted origin URIs)*
+**Access-Control-Expose-Headers** | **Content-Location**
