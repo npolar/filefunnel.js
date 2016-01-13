@@ -408,11 +408,11 @@
 				}
 
 				[].slice.call(event.target.files).forEach(function(file) {
-					var f, fileSize = file.size, fileModified = file.lastModifiedDate, fileItemElems = {};
+					var fileSize = file.size, fileModified = file.lastModifiedDate, fileItemElems = {};
 
 					// Ignore files that has already been added
-					for(f in files) {
-						if((f = files[f].reference).name == file.name && f.lastModifiedDate.valueOf() == fileModified.valueOf()) {
+					for(var f, i = 0; i < files.length; ++i) {
+						if((f = files[i].reference).name == file.name && f.lastModifiedDate.valueOf() == fileModified.valueOf()) {
 							return;
 						}
 					}
