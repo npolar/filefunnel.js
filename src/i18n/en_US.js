@@ -3,8 +3,8 @@
 
 	FileFunnel.i18n.en_US = {
 		// Button labels
+		add:            "Add files",
 		browse:         "Choose file",
-		browseMultiple: "Choose files",
 		cancel:         "Cancel",
 		delete:         "Delete",
 		reset:          "Reset",

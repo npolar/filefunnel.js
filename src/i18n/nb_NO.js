@@ -3,8 +3,8 @@
 
 	FileFunnel.i18n.nb_NO = {
 		// Button labels
+		add:            "Legg til filer",
 		browse:         "Velg fil",
-		browseMultiple: "Velg filer",
 		cancel:         "Avbryt",
 		delete:         "Slett fil",
 		reset:          "Tilbakestill",

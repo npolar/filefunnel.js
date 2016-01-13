@@ -3,8 +3,8 @@
 
 	FileFunnel.i18n.ja_JP = {
 		// Button labels
+		add:            "ファイル追加",
 		browse:         "ファイル選択",
-		browseMultiple: "ファイル選択",
 		cancel:         "キャンセル",
 		delete:         "ファイル削除",
 		reset:          "リセット",
