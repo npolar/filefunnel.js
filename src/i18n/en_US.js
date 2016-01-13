@@ -6,6 +6,7 @@
 		browse:         "Choose file",
 		browseMultiple: "Choose files",
 		cancel:         "Cancel",
+		delete:         "Delete",
 		reset:          "Reset",
 		upload:         "Upload",
 
@@ -21,10 +22,13 @@
 		fileType:       "Filetype",
 
 		// Status indicators
+		aborted:        "Upload aborted",
+		failed:         "Upload failed",
 		forbidden:      "Unauthorized for upload",
 		oversized:      "File too big for upload",
 		refused:        "Connection refused",
-		success:        "Upload successful"
+		success:        "Upload successful",
+		timeout:        "Upload timed out"
 	};
 
 	FileFunnel.i18n.en = FileFunnel.i18n.en_US;

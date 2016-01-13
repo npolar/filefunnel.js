@@ -6,7 +6,7 @@
 		browse:         "Velg fil",
 		browseMultiple: "Velg filer",
 		cancel:         "Avbryt",
-		delete:         "Slett",
+		delete:         "Slett fil",
 		reset:          "Tilbakestill",
 		upload:         "Last opp",
 

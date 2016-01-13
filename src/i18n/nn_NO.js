@@ -6,6 +6,7 @@
 		browse:         "Velj fil",
 		browseMultiple: "Velj filer",
 		cancel:         "Avbryt",
+		delete:         "Slett fil",
 		reset:          "Tilbakestill",
 		upload:         "Last opp",
 
@@ -21,10 +22,13 @@
 		fileType:       "Filtype",
 
 		// Status indicators
+		aborted:        "Opplasting avbrote",
+		failed:         "Opplasting feila",
 		forbidden:      "Ikkje autorisert for opplasting",
 		oversized:      "Filen er for stor for opplasting",
 		refused:        "Tilkobling nekta",
-		success:        "Opplasting gjennomført"
+		success:        "Opplasting gjennomført",
+		timeout:        "Opplastingen ble tidsavbrote"
 	};
 
 	FileFunnel.i18n.nn = FileFunnel.i18n.nn_NO;
