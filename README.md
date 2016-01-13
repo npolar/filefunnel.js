@@ -37,10 +37,12 @@ Key               | Value                                                     | 
 #### Methods:
 Method     | Parameters              | Description
 -----------|-------------------------|-------------------------------------------------------------------------
+**abort**  | *none*                  | Abort any upload in progress
 **browse** | *none*                  | Show the file selection dialogue
 **build**  | *none*                  | Rebuild the form with new settings
 **hide**   | *none*                  | Hide the form/widget
 **on**     | **event**, **callback** | Add/replace **callback** function to specified **event**
+**reset**  | *none*                  | Clear files from file upload queue
 **resize** | **width**               | Resize the form to given **width** (or parent width if no width is specified)
 **show**   | *none*                  | Show the form/widget
 **toggle** | *none*                  | Toggle form/widget visibility
@@ -104,7 +106,7 @@ The nature of chunked upload also allows for more accurate error messages if a f
 In order to accept chunked uploads, the following two headers must be accepted:
  * **X-File-Name** containing the file name of the current file being uploaded
  * **X-File-Size** containing the byte size of the current file being uploaded
- 
+
 File chunks are sent in the *correct order* so it should be easy to reassemble the files after all chunks has been received.
 By using the custom **X-File-Size** header, the server can know that the complete file has been received when the *total* number of bytes of *all chunks* matches the value of the header.
 The MIME type of the file being uploaded can be accessed by the **Content-Type** header, and the size of individual chunks is stored in the **Content-Length** header.

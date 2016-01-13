@@ -313,12 +313,15 @@
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.51;
+	FileFunnel.VERSION = 0.52;
 
 	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
 
 	// Prototype methods
 	FileFunnel.prototype = {
+		abort: function() {
+			(this._elements.resetButton && this._elements.resetButton.dom.click());
+		},
 		browse: function() {
 			(this._elements.fileInput && this._elements.fileInput.dom.click());
 		},
@@ -745,6 +748,9 @@
 			}, this);
 
 			return this;
+		},
+		reset: function() {
+			(this._elements.form && this._elements.form.dom.reset());
 		},
 		resize: function(width) {
 			(this._elements.form && this._parent && (this._elements.form.dom.style.width = (isNaN((width = Number(width))) ? this._parent.dom.offsetWidth : width) + "px"));
