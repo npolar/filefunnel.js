@@ -15,7 +15,7 @@ new FileFunnel("div", {
 });
 
 // Add FileFunnel as a widget to the first input element with a 'filefunnel' attribute
-new FileFunnel("input[filefunnel]" {
+new FileFunnel("input[filefunnel]", {
   autoResize: true,                   // Enable automatic resizing of the widget
   chunked: true,                      // Enable chunked uploading
   server: "https://localhost:3751"    // Server backed accepting files
