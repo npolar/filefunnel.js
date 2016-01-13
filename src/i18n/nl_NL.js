@@ -3,11 +3,12 @@
 
 	FileFunnel.i18n.nl_NL = {
 		// Button labels
+    add:            "Voeg bestanden toe",
 		browse:         "Selecteer bestand",
-		browseMultiple: "Selecteer bestanden",
+    delete:         "Verwijderen",
 		cancel:         "Annuleer",
 		reset:          "Wissen",
-		upload:         "Upload",
+		upload:         "Uploaden",
 
 		// Size indicators
 		bytes:          " bytes",
@@ -21,10 +22,13 @@
 		fileType:       "Bestandsformaat",
 
 		// Status indicators
+    aborted:        "Upload geannuleerd",
+    failed:         "Upload mislukt",
 		forbidden:      "Upload niet toegestaan",
 		oversized:      "Bestand is te groot",
 		refused:        "Verbinding geweigerd",
-		success:        "Bestand succesvol geupload"
+		success:        "Bestand succesvol geupload",
+    timeout:        "Tijd verstreken"
 	};
 
 	FileFunnel.i18n.nl = FileFunnel.i18n.nl_NL;
