@@ -307,15 +307,15 @@
 		this.locale = (this._options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
 
 		// Current status
-		this.status = FileFunnel.status.READY;
+		this.status = FileFunnel.status.NONE;
 
 		this.build();
 		return this;
 	}
 
-	FileFunnel.VERSION = 0.52;
+	FileFunnel.VERSION = 0.53;
 
-	FileFunnel.status = { READY: 0, UPLOADING: 1, COMPLETED: 2, ABORTED: 3, FAILED: 4 };
+	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
 	// Prototype methods
 	FileFunnel.prototype = {
@@ -451,9 +451,9 @@
 					});
 				});
 
-				// Set status to READY, and enable/disable the upload button
-				self.status = FileFunnel.status.READY;
-				elems.submitButton.enabled = event.target.files.length;
+				// Set status, and enable/disable the upload button
+				self.status = (files.length ? FileFunnel.status.READY : FileFunnel.status.NONE);
+				elems.submitButton.enabled = files.length;
 			});
 
 			// Handle form submit
@@ -709,6 +709,7 @@
 				elems.browseButton.enabled = true;
 				elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.reset;
+				self.status = FileFunnel.status.NONE;
 			});
 
 			return this;
@@ -818,4 +819,3 @@
 
 	return FileFunnel;
 }());
-
