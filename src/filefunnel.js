@@ -9,15 +9,24 @@
 		return [].slice.call((context || document).querySelectorAll(query));
 	}
 
-	function parseOptions(options, defaults) {
-		(("object" == typeof options && options) || (options = {}));
-
-		for(var d in defaults) {
-			(options.hasOwnProperty(d) || (options[d] = defaults[d]));
+	// Object.assign polyfill
+	("function" != typeof Object.assign && (Object.assign = function(target) {
+		if(undefined === target || null === target) {
+			throw new TypeError("Cannot convert undefined or null to object");
 		}
 
-		return options;
-	}
+		var output = Object(target), index, source, key;
+
+		for(index = 1; index < arguments.length; ++index) {
+			if(undefined !== (source = arguments[index]) && null !== source) {
+				for(key in source) {
+					(source.hasOwnProperty(key) && (output[key] = source[key]));
+				}
+			}
+		}
+
+		return output;
+	}));
 
 	// DOM Element helper class for easy DOM manipulation
 	function Element(selector, options) {
@@ -31,14 +40,14 @@
 		}
 
 		// Parse options and inject defaults
-		options = parseOptions(options, {
+		options = Object.assign({
 			appendTo:       null,
 			context:        document,
 			html:           "",
 			insertAfter:    null,
 			insertBefore:   null,
 			replace:        null
-		});
+		}, options);
 
 		var a, parsed, elem = (selector instanceof HTMLElement ? selector : null);
 
@@ -287,18 +296,18 @@
 	function FileFunnel(selector, options) {
 		this._callbacks = {};
 		this._elements  = {};
-		this._i18n      = FileFunnel.i18n.en_GB;
+		this._i18n      = {};
 		this._parent    = Element(selector);
 
 		// Parse and merge options with defaults
-		this._options = parseOptions(options, {
+		this._options = Object.assign({
 			accept:     "*/*",          // Comma-separated MIME types
 			autoResize: true,           // Enable automatic widget resizing
 			chunked:    false,          // Enable chunked uploading
 			chunkSize:  0x100000,       // Chunk byte size (1 MiB by default)
 			className:  "filefunnel",   // Dot-separated CSS class names
 			multiple:   false           // Enable upload of multiple files
-		});
+		}, options);
 
 		// Array of files for upload
 		this.files  = [];
@@ -306,14 +315,14 @@
 		// Use locale specified in constructor options if specified, otherwise browser locale. Default locale as fallback
 		this.locale = (this._options.locale || (navigator ? (navigator.userLanguage || navigator.language).replace("-", "_") : null));
 
-		// Current status
+		// Initially use NONE as status
 		this.status = FileFunnel.status.NONE;
 
-		this.build();
-		return this;
+		// Build DOM elements
+		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.53;
+	FileFunnel.VERSION = 0.54;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -722,18 +731,11 @@
 			return this;
 		},
 		get locale() {
-			for(var code in FileFunnel.i18n) {
-				if(this._i18n == FileFunnel.i18n[code]) {
-					return code;
-				}
-			}
-
-			return undefined;
+			return this._i18n._id;
 		},
 		set locale(value) {
-			if(FileFunnel.i18n[value] && (FileFunnel.i18n[value] !== this._i18n)) {
-				this._i18n = FileFunnel.i18n[value];
-			}
+			// Use en_GB as fallback for untranslated values
+			return (this._i18n = Object.assign({ _id: (FileFunnel.i18n[value] ? value : "en_GB") }, FileFunnel.i18n.en_GB, FileFunnel.i18n[value]))._id;
 		},
 		on: function(events, callback) {
 			// Accept single event or array of events
