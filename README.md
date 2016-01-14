@@ -32,6 +32,7 @@ Key               | Value                                                     | 
 **className**     | Dot-separated CSS class names added to form               | *.filefunnel*
 **locale**        | Name of locale (or *null* for browser locale)             | *null*
 **multiple**      | Enable support for multiple files                         | *false*
+**progress**      | Enable progress tracking of non-chunked uploads           | *false*
 **server**        | URI to server backend receiving the uploaded files        | *null*
 
 #### Methods:
@@ -89,7 +90,7 @@ gulp
 ## Backend support:
 FileFunnel currently supports two methods of file uploading, namely *form-data* and *chunked* as descibed below.
 While *form-data* support is easier to implement on the backend, *chunked* allows for more flexibility.
-Both of these utilise the **POST** method.
+Both of these utilise the **POST** method. Note that *progress tracking* will preflight the request with a **OPTIONS** header which has to be dealt with by the server for *chunked* uploads and *form-data* uploads with progress.
 
 #### Form-Data upload:
 The simplest form of backend implementation is achieved by supporting the **multipart/form-data** *Content-Type* for non-chunked uploads.
