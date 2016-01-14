@@ -306,7 +306,8 @@
 			chunked:    false,          // Enable chunked uploading
 			chunkSize:  0x100000,       // Chunk byte size (1 MiB by default)
 			className:  "filefunnel",   // Dot-separated CSS class names
-			multiple:   false           // Enable upload of multiple files
+			multiple:   false,          // Enable upload of multiple files
+			progress:   false           // Enable progress tracking (for non-chunked upload)
 		}, options);
 
 		// Array of files for upload
@@ -322,7 +323,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.55;
+	FileFunnel.VERSION = 0.56;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -446,6 +447,8 @@
 					);
 
 					files.push({
+						bytesSent:  0,
+						bytesTotal: file.size,
 						elements:   fileItemElems,
 						location:   null,
 						parent:     self,
@@ -455,7 +458,7 @@
 						xhr:        null,
 
 						get progress() {
-							return (FileFunnel.status.UPLOADING == this.status ? Math.round((this.elements.prog.value / this.elements.prog.max) * 100) : NaN);
+							return (FileFunnel.status.UPLOADING == this.status ? Math.round((this.bytesSent / this.bytesTotal) * 100) : NaN);
 						}
 					});
 				});
@@ -506,17 +509,15 @@
 					var chunkSize = ("number" == typeof options.chunkSize ? options.chunkSize: 0x100000);
 
 					files.forEach(function(file) {
-						var bytesSent = 0, bytesTotal = file.reference.size, fileName = file.elements.name.value;
+						var fileName = file.elements.name.value;
 
 						var sendNextChunk = function() {
-							var chunk = file.reference.slice(bytesSent, Math.min(bytesTotal, bytesSent + chunkSize) + 1, file.reference.type);
+							var chunk = file.reference.slice(file.bytesSent, Math.min(file.bytesTotal, file.bytesSent + chunkSize) + 1, file.reference.type);
 							var xhr = file.xhr = new XMLHttpRequest();
 
 							// Chunked upload start callback
 							xhr.onloadstart = function(e) {
 								file.status = FileFunnel.status.UPLOADING;
-								file.elements.prog.attribs.set("max", bytesTotal + (e.lengthComputable ? e.total : 0));
-								file.elements.prog.value = bytesSent;
 
 								// Run start callback if defined
 								("function" == typeof self._callbacks.start && self._callbacks.start(file));
@@ -524,7 +525,7 @@
 
 							// Chunked upload progress callback
 							xhr.upload.onprogress = function(e) {
-								(e.lengthComputable && (file.elements.prog.value = bytesSent + e.loaded));
+								(e.lengthComputable && (file.elements.prog.value = (file.bytesSent + e.loaded)));
 
 								// Run progress callback if defined
 								("function" == typeof self._callbacks.progress && self._callbacks.progress(file));
@@ -536,11 +537,10 @@
 
 								// Success handling
 								if(200 <= status && 300 > status) {
-									file.elements.prog.attribs.set("max", bytesTotal);
-									file.elements.prog.value = (bytesSent += chunk.size);
+									file.elements.prog.attribs.set("max", file.bytesTotal).set("value", (file.bytesSent += chunk.size));
 
 									// Send next chunk if available
-									if(bytesSent < bytesTotal) {
+									if(file.bytesSent < file.bytesTotal) {
 										return ("function" == typeof sendNextChunk && sendNextChunk());
 									}
 
@@ -549,7 +549,7 @@
 									file.elements.info.value = i18n.success;
 									finalizeUpload(file);
 
-									// Set file location if status code is 201 (created)
+									// Set file location and response text if status code is 201 (created)
 									if(201 == status) {
 										file.location = xhr.getResponseHeader("Content-Location") || null;
 										file.response = xhr.responseText || null;
@@ -607,16 +607,16 @@
 
 							xhr.setRequestHeader("Content-Type", chunk.type);
 							xhr.setRequestHeader("X-File-Name", fileName);
-							xhr.setRequestHeader("X-File-Size", bytesTotal);
+							xhr.setRequestHeader("X-File-Size", file.bytesTotal);
 
 							xhr.send(chunk);
 						};
 
-						file.elements.prog.attribs.set("max", bytesTotal);
+						file.elements.prog.attribs.set("max", file.bytesTotal);
 						sendNextChunk();
 					});
 				} else {
-					var xhr = files.xhr = new XMLHttpRequest(), formData = new FormData();
+					var xhr = files.xhr = new XMLHttpRequest(), formData = new FormData(), file, fileInProgress = 0, byteOffset = 0;
 
 					// Form upload start callback
 					xhr.onloadstart = function(e) {
@@ -629,6 +629,33 @@
 						});
 					};
 
+					// Form upload progress callback
+					if(options.progress) {
+						xhr.upload.onprogress = function(e) {
+							if(e.lengthComputable) {
+								if((file = files[fileInProgress])) {
+									// Update progressbar for current file
+									file.elements.prog.attribs
+									.set("max", file.bytesTotal)
+									.set("value", (file.bytesSent = Math.min(file.bytesTotal, e.loaded - byteOffset)));
+
+									// Proceed with next file when fully uploaded
+									if(file.bytesSent >= file.bytesTotal) {
+										byteOffset += file.bytesTotal;
+
+										if(++fileInProgress >= files.length) {
+											// Make progressbar for last file indeterminable while waiting for server response
+											file.elements.prog.attribs.remove("max", "value");
+										}
+									}
+								}
+
+								// Run progress callback if defined
+								("function" == typeof self._callbacks.progress && self._callbacks.progress(file));
+							}
+						};
+					}
+
 					// Form upload success callback
 					xhr.onload = function(e) {
 						var status = e.target.status;
@@ -637,9 +664,9 @@
 							// Success handling
 							if(200 <= status && 300 > status) {
 								file.status = FileFunnel.status.COMPLETED;
-								file.elements.prog.attribs.set("max", e.total || 1).set("value", e.loaded || 1);
+								file.elements.prog.attribs.set("max", 1).set("value", 1);
 								file.elements.info.classes.add("success");
-								file.elements.info.value = i18n.success;
+								file.elements.info.value = statusTexts[status] || i18n.success;
 								finalizeUpload(file);
 
 								// Run success callback if defined
@@ -649,7 +676,7 @@
 							// Error handling
 							else if(400 <= status) {
 								file.status = FileFunnel.status.FAILED;
-								file.elements.prog.attribs.set("max", e.total || 1).set("value", e.loaded || 0);
+								file.elements.prog.attribs.set("max", 1).set("value", 0);
 								file.elements.info.classes.add("error");
 								file.elements.info.value = statusTexts[status] || i18n.failed;
 								finalizeUpload(file);
