@@ -96,7 +96,7 @@
 
 		// Add element to DOM
 		if((a = Element(options.replace))) {
-			a.parent.replace(this, a);
+			a.parent.replace(a, this);
 		} else if((a = Element(options.appendTo))) {
 			a.append(this);
 		} else if((a = Element(options.insertAfter))) {
@@ -260,7 +260,7 @@
 				this.dom.removeChild(element.dom);
 			}
 		},
-		replace: function(newElement, oldElement) {
+		replace: function(oldElement, newElement) {
 			if((newElement = new Element(newElement)) && (oldElement = Element(oldElement, this))) {
 				this.dom.replaceChild(newElement.dom, oldElement.dom);
 				newElement.parent = this;
@@ -322,7 +322,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.54;
+	FileFunnel.VERSION = 0.55;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -365,7 +365,7 @@
 			if(parent) {
 				if(self._elements.form && self._elements.form.parent) {
 					// Replace existing form if available
-					self._elements.form.parent.replace(elems.form, self._elements.form);
+					self._elements.form.parent.replace(self._elements.form, elems.form);
 				} else if(parent.dom instanceof HTMLInputElement) {
 					// Create a hidden-by-default widget for HTMLInputElement parents
 					parent.parent.append(elems.form, parent);
