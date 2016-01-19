@@ -55,7 +55,8 @@
 				accept: "*/*",
 				chunked: false,
 				multiple: true,
-				server: "http://localhost:3751"
+				server: "http://localhost:3751",
+				progress: true
 			});
 
 			new FileFunnel("#multipleChunked", {
@@ -69,7 +70,8 @@
 				accept: "*/*",
 				chunked: false,
 				multiple: false,
-				server: "http://localhost:3751"
+				server: "http://localhost:3751",
+				progress: true
 			});
 
 			new FileFunnel("#singleChunked", {
@@ -111,7 +113,6 @@
 					file.parent.element.value = file.parent.server + file.location;
 				}
 			});
-
 		</script>
 	</body>
 </html>
