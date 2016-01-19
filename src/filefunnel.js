@@ -323,7 +323,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.56;
+	FileFunnel.VERSION = 0.60;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -526,6 +526,7 @@
 							// Chunked upload progress callback
 							xhr.upload.onprogress = function(e) {
 								(e.lengthComputable && (file.elements.prog.value = (file.bytesSent + e.loaded)));
+								(file.bytesSent + e.loaded >= file.bytesTotal && (file.elements.info.value = i18n.processing));
 
 								// Run progress callback if defined
 								("function" == typeof self._callbacks.progress && self._callbacks.progress(file));
@@ -641,12 +642,9 @@
 
 									// Proceed with next file when fully uploaded
 									if(file.bytesSent >= file.bytesTotal) {
+										++fileInProgress;
 										byteOffset += file.bytesTotal;
-
-										if(++fileInProgress >= files.length) {
-											// Make progressbar for last file indeterminable while waiting for server response
-											file.elements.prog.attribs.remove("max", "value");
-										}
+										file.elements.info.value = i18n.processing;
 									}
 								}
 
@@ -824,14 +822,15 @@
 
 			// Placeholder texts
 			fileName:       "Filename",
-			fileSize:       "Filesize",
-			fileType:       "Filetype",
+			fileSize:       "Unknown size",
+			fileType:       "Unrecognised filetype",
 
 			// Status indicators
 			aborted:        "Upload aborted",
 			failed:         "Upload failed",
 			forbidden:      "Unauthorised for upload",
 			oversized:      "File too big for upload",
+			processing:     "Processing, please wait...",
 			refused:        "Connection refused",
 			success:        "Upload successful",
 			timeout:        "Upload timed out"
