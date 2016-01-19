@@ -18,14 +18,15 @@
 
 		// Placeholder texts
 		fileName:       "ファイルネーム",
-		fileSize:       "ファイルサイズ",
-		fileType:       "ファイルタイプ",
+		fileSize:       "ファイルサイズ不明",
+		fileType:       "無認識のファイルタイプ",
 
 		// Status indicators
 		aborted:        "アップロード中止された",
 		failed:         "アップロード失敗",
 		forbidden:      "アップロード無許可",
 		oversized:      "ファイルサイズが大きすぎる",
+		processing:     "処理中、お待ち下さい…",
 		refused:        "接続拒否",
 		success:        "アップロード完成",
 		timeout:        "タイムアウト"

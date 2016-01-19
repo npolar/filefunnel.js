@@ -18,14 +18,15 @@
 
 		// Placeholder texts
 		fileName:       "Filnavn",
-		fileSize:       "Filstørrelse",
-		fileType:       "Filtype",
+		fileSize:       "Ukjent størrelse",
+		fileType:       "Ukjent filtype",
 
 		// Status indicators
 		aborted:        "Opplasting avbrutt",
 		failed:         "Opplasting feilet",
 		forbidden:      "Ikke autorisert for opplasting",
 		oversized:      "Filen er for stor for opplasting",
+		processing:     "Prosesserer, vennligst vent...",
 		refused:        "Tilkobling nektet",
 		success:        "Opplasting gjennomført",
 		timeout:        "Opplastingen ble tidsavbrutt"

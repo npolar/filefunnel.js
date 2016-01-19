@@ -18,14 +18,15 @@
 
 		// Placeholder texts
 		fileName:       "Filename",
-		fileSize:       "Filesize",
-		fileType:       "Filetype",
+		fileSize:       "Unknown size",
+		fileType:       "Unrecognized filetype",
 
 		// Status indicators
 		aborted:        "Upload aborted",
 		failed:         "Upload failed",
 		forbidden:      "Unauthorized for upload",
 		oversized:      "File too big for upload",
+		processing:     "Processing, please wait...",
 		refused:        "Connection refused",
 		success:        "Upload successful",
 		timeout:        "Upload timed out"

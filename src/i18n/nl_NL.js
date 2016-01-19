@@ -18,14 +18,15 @@
 
 		// Placeholder texts
 		fileName:       "Bestandsnaam",
-		fileSize:       "Bestandsgrootte",
-		fileType:       "Bestandsformaat",
+		fileSize:       "Onbekende grootte",
+		fileType:       "Onbekende bestandstype",
 
 		// Status indicators
 		aborted:        "Upload geannuleerd",
 		failed:         "Upload mislukt",
 		forbidden:      "Upload niet toegestaan",
 		oversized:      "Bestand is te groot",
+		processing:     "Verwerking, even geduld...",
 		refused:        "Verbinding geweigerd",
 		success:        "Bestand succesvol geupload",
 		timeout:        "Tijd verstreken"
