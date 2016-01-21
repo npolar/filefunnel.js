@@ -323,7 +323,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.60;
+	FileFunnel.VERSION = 0.61;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -439,13 +439,19 @@
 					// Populate filelist DOM with new fileinfo item
 					elems.fileList.add(new Element("fieldset.fileinfo")
 						.append(new Element("legend", { html: file.name }))
-						.append((fileItemElems.name = new Element("input[type=text][placeholder=" + i18n.fileName + "][value=" + file.name + "].name")))
-						.append((fileItemElems.size = new Element("input[type=text][placeholder=" + i18n.fileSize + "][value=" + fileSize + "][disabled].size")))
-						.append((fileItemElems.type = new Element("input[type=text][placeholder=" + i18n.fileType + "][value=" + file.type + "][disabled].type")))
+						.append((fileItemElems.name = new Element("input[type=text].name")))
+						.append((fileItemElems.size = new Element("input[type=text][disabled].size")))
+						.append((fileItemElems.type = new Element("input[type=text][disabled].type")))
 						.append((fileItemElems.prog = new Element("progress[value=0].progress")))
 						.append((fileItemElems.info = new Element("span.info")))
 					);
 
+					// Set placeholder and value attributes of filename, filesize and filetype input elements
+					fileItemElems.name.attribs.set("placeholder", i18n.fileName).set("value", file.name);
+					fileItemElems.size.attribs.set("placeholder", i18n.fileSize).set("value", fileSize);
+					fileItemElems.type.attribs.set("placeholder", i18n.fileType).set("value", file.type);
+
+					// Push added file to files array for future reference
 					files.push({
 						bytesSent:  0,
 						bytesTotal: file.size,
