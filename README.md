@@ -125,9 +125,11 @@ Code    | Status message           | Description
 **401** | *Unauthorized*           | Indicates that the user must be authenticated in order to upload
 **403** | *Forbidden*              | Indicates that the user does not have the sufficient rights to upload
 **409** | *Conflict*               | Indicates that the file already exists on the server (and duplicates are rejected)
-**412** | *Payload Too Large*      | Indicates that the file is too big to be accepted
-**413** | *Precondition Failed*    | Indicates that the header described in the *Vary* header is missing/erroneous
+**412** | *Precondition Failed*    | Indicates that the header described in the *Vary* header is missing/erroneous
+**413** | *Payload Too Large*      | Indicates that the file is too big to be accepted
 **415** | *Unsupported Media Type* | Indicates that the file is of a media type not accepted by the server
+
+Status code **412** is also used to indicate that the *filename* is *missing/erroneous*.
 
 All status codes in the **2xx**-range are treated as **success**, while codes in the **4xx** and **5xx** -ranges are treated as **errors**.
 Status codes in the **3xx**-range are currently not handled by the FileFunnel client.
