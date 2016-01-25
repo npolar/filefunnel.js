@@ -325,7 +325,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.70;
+	FileFunnel.VERSION = 0.71;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -470,6 +470,9 @@
 								file.elements.info.classes.remove("error");
 								file.elements.info.value = "";
 							}
+
+							// Disable upload if no files are ready for upload
+							elems.submitButton.enabled = files.some(function(file) { return FileFunnel.status.READY == file.status; });
 						});
 					}
 
@@ -512,7 +515,7 @@
 
 				// Set status, and enable/disable the upload button
 				self.status = (files.length ? FileFunnel.status.READY : FileFunnel.status.NONE);
-				elems.submitButton.enabled = files.length;
+				elems.submitButton.enabled = files.some(function(file) { return FileFunnel.status.READY == file.status; });
 			});
 
 			// Handle form submit
