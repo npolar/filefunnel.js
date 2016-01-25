@@ -23,13 +23,16 @@
 
 		// Status indicators
 		aborted:        "アップロード中止された",
+		exists:         "ファイルがすでに存在します",
 		failed:         "アップロード失敗",
 		forbidden:      "アップロード無許可",
+		invalidName:    "ファイルネーム無効",
 		oversized:      "ファイルサイズが大きすぎる",
 		processing:     "処理中、お待ち下さい…",
 		refused:        "接続拒否",
 		success:        "アップロード完成",
-		timeout:        "タイムアウト"
+		timeout:        "タイムアウト",
+		unsupported:    "ファイルタイプ非対応"
 	};
 
 	FileFunnel.i18n.ja = FileFunnel.i18n.ja_JP;
