@@ -306,6 +306,8 @@
 			chunked:    false,          // Enable chunked uploading
 			chunkSize:  0x100000,       // Chunk byte size (1 MiB by default)
 			className:  "filefunnel",   // Dot-separated CSS class names
+			emptyNames: false,          // Allow empty file names
+			maxSize:    Infinity,       // Maximum file size accepted by the client
 			multiple:   false,          // Enable upload of multiple files
 			progress:   false           // Enable progress tracking (for non-chunked upload)
 		}, options);
@@ -323,7 +325,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.61;
+	FileFunnel.VERSION = 0.70;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -337,13 +339,15 @@
 		},
 		build: function() {
 			var self = this, files = self.files, i18n = self._i18n, options = self._options, parent = self._parent;
-			var acceptTypes = ("string" == typeof options.accept ? options.accept : "*/*");
+
+			// Remove characters that could possibly corrupt the dom from acceptable file types, and split to array
+			var acceptTypes = ("string" == typeof options.accept ? options.accept : "*/*").replace(/[\[\]#\s]/g, "").split(",");
 
 			// Create DOM form and child elements
 			var elems = {
 				form:           new Element("form[enctype=multipart/form-data][method=POST]." + options.className),
 				browseButton:   new Element("input[type=button][value=" + (options.multiple ? i18n.add : i18n.browse) + "].browse"),
-				fileInput:      new Element("input[type=file][accept=" + acceptTypes + "][hidden][multiple]"),
+				fileInput:      new Element("input[type=file][accept=" + acceptTypes.join(",") + "][hidden][multiple]"),
 				fileList:       new Element("div.filelist"),
 				submitButton:   new Element("input[type=submit][value=" + i18n.upload + "][disabled].submit"),
 				resetButton:    new Element("input[type=reset][value=" + i18n.reset + "].reset")
@@ -353,7 +357,10 @@
 			var statusTexts = {
 				401: i18n.forbidden,
 				403: i18n.forbidden,
-				413: i18n.oversized
+				409: i18n.exists,
+				412: i18n.invalidName,
+				413: i18n.oversized,
+				415: i18n.unsupported
 			};
 
 			// Disable multi file upload if not explicitly defined in options
@@ -421,7 +428,7 @@
 				}
 
 				[].slice.call(event.target.files).forEach(function(file) {
-					var fileSize = file.size, fileModified = file.lastModifiedDate, fileItemElems = {};
+					var file, fileSize = file.size, fileModified = file.lastModifiedDate, fileItemElems = {};
 
 					// Ignore files that has already been added
 					for(var f, i = 0; i < files.length; ++i) {
@@ -451,8 +458,23 @@
 					fileItemElems.size.attribs.set("placeholder", i18n.fileSize).set("value", fileSize);
 					fileItemElems.type.attribs.set("placeholder", i18n.fileType).set("value", file.type);
 
+					// Prevent empty names if not allowed
+					if(!options.emptyNames) {
+						fileItemElems.name.on([ "input", "change" ] , function(e) {
+							if(!e.target.value && FileFunnel.status.READY == file.status) {
+								file.status = FileFunnel.status.ABORTED;
+								file.elements.info.classes.add("error");
+								file.elements.info.value = i18n.invalidName;
+							} else if(i18n.invalidName == file.elements.info.value) {
+								file.status = FileFunnel.status.READY;
+								file.elements.info.classes.remove("error");
+								file.elements.info.value = "";
+							}
+						});
+					}
+
 					// Push added file to files array for future reference
-					files.push({
+					files.push((file = {
 						bytesSent:  0,
 						bytesTotal: file.size,
 						elements:   fileItemElems,
@@ -466,7 +488,26 @@
 						get progress() {
 							return (FileFunnel.status.UPLOADING == this.status ? Math.round((this.bytesSent / this.bytesTotal) * 100) : NaN);
 						}
-					});
+					}));
+
+					// Function used to check if filetype is supported
+					function mimeMatchFunc(inputType) {
+						var mimeMatch = inputType.match(/^([^/]+)\/(.*)$/);
+						return function(acceptType) {
+							return ((acceptType == inputType) || (mimeMatch && acceptType == mimeMatch[1] + "/*") || (acceptType == "*/*"));
+						};
+					}
+
+					// Verify that the file is acceptable (client side)
+					if(file.reference.size > options.maxSize) {
+						file.status = FileFunnel.status.ABORTED;
+						file.elements.info.classes.add("error");
+						file.elements.info.value = i18n.oversized;
+					} else if(!acceptTypes.some(mimeMatchFunc(file.reference.type))) {
+						file.status = FileFunnel.status.ABORTED;
+						file.elements.info.classes.add("error");
+						file.elements.info.value = i18n.unsupported;
+					}
 				});
 
 				// Set status, and enable/disable the upload button
@@ -515,6 +556,11 @@
 					var chunkSize = ("number" == typeof options.chunkSize ? options.chunkSize: 0x100000);
 
 					files.forEach(function(file) {
+						// Ignore files not ready for upload (i.e. invalid files)
+						if(file.status != FileFunnel.status.READY) {
+							return;
+						}
+
 						var fileName = file.elements.name.value;
 
 						var sendNextChunk = function() {
@@ -628,11 +674,13 @@
 					// Form upload start callback
 					xhr.onloadstart = function(e) {
 						files.forEach(function(file) {
-							file.status = FileFunnel.status.UPLOADING;
-							file.elements.prog.attribs.remove("max", "value");
+							if(FileFunnel.status.READY == file.status) {
+								file.status = FileFunnel.status.UPLOADING;
+								file.elements.prog.attribs.remove("max", "value");
 
-							// Run start callback if defined
-							("function" == typeof self._callbacks.start && self._callbacks.start(file));
+								// Run start callback if defined
+								("function" == typeof self._callbacks.start && self._callbacks.start(file));
+							}
 						});
 					};
 
@@ -640,7 +688,7 @@
 					if(options.progress) {
 						xhr.upload.onprogress = function(e) {
 							if(e.lengthComputable) {
-								if((file = files[fileInProgress])) {
+								if((file = files[fileInProgress]) && FileFunnel.status.UPLOADING == file.status) {
 									// Update progressbar for current file
 									file.elements.prog.attribs
 									.set("max", file.bytesTotal)
@@ -652,10 +700,10 @@
 										byteOffset += file.bytesTotal;
 										file.elements.info.value = i18n.processing;
 									}
-								}
 
-								// Run progress callback if defined
-								("function" == typeof self._callbacks.progress && self._callbacks.progress(file));
+									// Run progress callback if defined
+									("function" == typeof self._callbacks.progress && self._callbacks.progress(file));
+								}
 							}
 						};
 					}
@@ -665,28 +713,30 @@
 						var status = e.target.status;
 
 						files.forEach(function(file) {
-							// Success handling
-							if(200 <= status && 300 > status) {
-								file.status = FileFunnel.status.COMPLETED;
-								file.elements.prog.attribs.set("max", 1).set("value", 1);
-								file.elements.info.classes.add("success");
-								file.elements.info.value = statusTexts[status] || i18n.success;
-								finalizeUpload(file);
+							if(FileFunnel.status.UPLOADING == file.status) {
+								// Success handling
+								if(200 <= status && 300 > status) {
+									file.status = FileFunnel.status.COMPLETED;
+									file.elements.prog.attribs.set("max", 1).set("value", 1);
+									file.elements.info.classes.add("success");
+									file.elements.info.value = statusTexts[status] || i18n.success;
+									finalizeUpload(file);
 
-								// Run success callback if defined
-								("function" == typeof self._callbacks.success && self._callbacks.success(file));
-							}
+									// Run success callback if defined
+									("function" == typeof self._callbacks.success && self._callbacks.success(file));
+								}
 
-							// Error handling
-							else if(400 <= status) {
-								file.status = FileFunnel.status.FAILED;
-								file.elements.prog.attribs.set("max", 1).set("value", 0);
-								file.elements.info.classes.add("error");
-								file.elements.info.value = statusTexts[status] || i18n.failed;
-								finalizeUpload(file);
+								// Error handling
+								else if(400 <= status) {
+									file.status = FileFunnel.status.FAILED;
+									file.elements.prog.attribs.set("max", 1).set("value", 0);
+									file.elements.info.classes.add("error");
+									file.elements.info.value = statusTexts[status] || i18n.failed;
+									finalizeUpload(file);
 
-								// Run error callback if defined
-								("function" == typeof self._callbacks.error && self._callbacks.error(file));
+									// Run error callback if defined
+									("function" == typeof self._callbacks.error && self._callbacks.error(file));
+								}
 							}
 						});
 					};
@@ -732,9 +782,12 @@
 						});
 					};
 
+					// Add files ready for upload (i.e. valid files)
 					files.forEach(function(file) {
-						formData.append(file.reference.name, file.reference, file.elements.name.value);
-						file.elements.prog.dom.removeAttribute("value");
+						if(file.status == FileFunnel.status.READY) {
+							formData.append(file.reference.name, file.reference, file.elements.name.value);
+							file.elements.prog.dom.removeAttribute("value");
+						}
 					});
 
 					xhr.open("POST", options.server, true);
@@ -833,13 +886,16 @@
 
 			// Status indicators
 			aborted:        "Upload aborted",
+			exists:         "File already exists",
 			failed:         "Upload failed",
 			forbidden:      "Unauthorised for upload",
+			invalidName:    "Invalid filename",
 			oversized:      "File too big for upload",
 			processing:     "Processing, please wait...",
 			refused:        "Connection refused",
 			success:        "Upload successful",
-			timeout:        "Upload timed out"
+			timeout:        "Upload timed out",
+			unsupported:    "Unsupported filetype"
 		}
 	};
 

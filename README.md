@@ -23,17 +23,19 @@ new FileFunnel("input[filefunnel]", {
 ```
 
 #### Constructor options:
-Key               | Value                                                     | Default
-------------------|-----------------------------------------------------------|-------------------------
-**accept**        | Comma-separated list of acceptable MIME types             | *&#42;/&#42; (any type)*
-**autoResize**    | Enable automatic widget resizing based on parent width    | *true*
-**chunked**       | Enable chunked uploading                                  | *false*
-**chunkSize**     | Chunk byte size for chunked uploading                     | *1048576 (1 MiB)*
-**className**     | Dot-separated CSS class names added to form               | *.filefunnel*
-**locale**        | Name of locale (or *null* for browser locale)             | *null*
-**multiple**      | Enable support for multiple files                         | *false*
-**progress**      | Enable progress tracking of non-chunked uploads           | *false*
-**server**        | URI to server backend receiving the uploaded files        | *null*
+Key               | Value                                                       | Default
+------------------|-------------------------------------------------------------|-------------------------
+**accept**        | Comma-separated list of acceptable MIME types (client side) | *&#42;/&#42; (any type)*
+**autoResize**    | Enable automatic widget resizing based on parent width      | *true*
+**chunked**       | Enable chunked uploading                                    | *false*
+**chunkSize**     | Chunk byte size for chunked uploading                       | *1048576 (1 MiB)*
+**className**     | Dot-separated CSS class names added to form                 | *.filefunnel*
+**emptyNames**    | Allow empty file names to be uploaded (client side)         | *false*
+**locale**        | Name of locale (or *null* for browser locale)               | *null*
+**maxSize**       | Maximum acceptable file byte size (client side)             | *Infinity*
+**multiple**      | Enable support for multiple files                           | *false*
+**progress**      | Enable progress tracking of non-chunked uploads             | *false*
+**server**        | URI to server backend receiving the uploaded files          | *null*
 
 #### Methods:
 Method     | Parameters              | Description
@@ -116,14 +118,16 @@ The MIME type of the file being uploaded can be accessed by the **Content-Type**
 
 For more verbose output to the user, the following status codes *may* be used:
 
-Code    | Status message        | Description
---------|-----------------------|-----------------------------------------------------------------------------
-**201** | *Created*             | Indicates that the complete file has been received and saved
-**202** | *Accepted*            | Indicates that a chunk was successfully received
-**401** | *Unauthorized*        | Indicates that the user must be authenticated in order to upload
-**403** | *Forbidden*           | Indicates that the user does not have the sufficient rights to upload
-**412** | *Payload Too Large*   | Indicates that the file is too big to be accepted
-**413** | *Precondition Failed* | Indicates that the header described in the *Vary* header is missing/erroneous
+Code    | Status message           | Description
+--------|--------------------------|-----------------------------------------------------------------------------------
+**201** | *Created*                | Indicates that the complete file has been received and saved
+**202** | *Accepted*               | Indicates that a chunk was successfully received
+**401** | *Unauthorized*           | Indicates that the user must be authenticated in order to upload
+**403** | *Forbidden*              | Indicates that the user does not have the sufficient rights to upload
+**409** | *Conflict*               | Indicates that the file already exists on the server (and duplicates are rejected)
+**412** | *Payload Too Large*      | Indicates that the file is too big to be accepted
+**413** | *Precondition Failed*    | Indicates that the header described in the *Vary* header is missing/erroneous
+**415** | *Unsupported Media Type* | Indicates that the file is of a media type not accepted by the server
 
 All status codes in the **2xx**-range are treated as **success**, while codes in the **4xx** and **5xx** -ranges are treated as **errors**.
 Status codes in the **3xx**-range are currently not handled by the FileFunnel client.
