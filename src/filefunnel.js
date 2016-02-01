@@ -312,6 +312,7 @@
 			headers:        {},             // Additional request headers to be sent
 			maxSize:        Infinity,       // Maximum file size accepted by the client
 			multiple:       false,          // Enable upload of multiple files
+			preview:        false,          // Enable preview of supported files
 			progress:       false           // Enable progress tracking (for non-chunked upload)
 		}, options);
 
@@ -328,7 +329,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.81;
+	FileFunnel.VERSION = 0.90;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -460,6 +461,7 @@
 						.append((fileItemElems.size = new Element("input[type=text][disabled].size")))
 						.append((fileItemElems.type = new Element("input[type=text][disabled].type")))
 						.append((fileItemElems.prog = new Element("progress[value=0].progress")))
+						.append((fileItemElems.view = new Element("div[hidden].view")))
 						.append((fileItemElems.info = new Element("span.info")))
 					);
 
@@ -467,6 +469,33 @@
 					fileItemElems.name.attribs.set("placeholder", i18n.fileName).set("value", file.name);
 					fileItemElems.size.attribs.set("placeholder", i18n.fileSize).set("value", fileSize);
 					fileItemElems.type.attribs.set("placeholder", i18n.fileType).set("value", file.type);
+
+					if(options.preview)
+					{
+						// Image files
+						if(file.type.match(/^image\//)) {
+							var reader = new FileReader();
+
+							reader.onload = function() {
+								var imageElem, closeElem, url = reader.result;
+
+								fileItemElems.view
+								.add((imageElem = new Element("img")))
+								.add((closeElem = new Element("a.close", { html: "&times;" })))
+								.attribs.remove("hidden");
+
+								imageElem
+								.on("click", function() { window.open(url, "_blank"); })
+								.attribs.set("title", i18n.previewOpen).set("src", url);
+
+								closeElem
+								.on("click", function() { fileItemElems.view.visible = false; })
+								.attribs.set("title", i18n.previewClose);
+							};
+
+							reader.readAsDataURL(file);
+						}
+					}
 
 					// Prevent empty names if not allowed
 					if(!options.emptyNames) {
@@ -912,6 +941,8 @@
 			delete:         "Delete",
 			reset:          "Reset",
 			upload:         "Upload",
+			previewOpen:    "Maximise preview in new window",
+			previewClose:   "Close preview",
 
 			// Size indicators
 			bytes:          " bytes",
