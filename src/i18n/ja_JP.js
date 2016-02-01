@@ -9,6 +9,8 @@
 		delete:         "ファイル削除",
 		reset:          "リセット",
 		upload:         "アップロード",
+		previewOpen:    "新しいウィンドウでプレビューを最大にする",
+		previewClose:   "プレビューを閉じる",
 
 		// Size indicators
 		bytes:          " バイト",

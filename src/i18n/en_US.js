@@ -9,6 +9,8 @@
 		delete:         "Delete",
 		reset:          "Reset",
 		upload:         "Upload",
+		previewOpen:    "Maximize preview in new window",
+		previewClose:   "Close preview",
 
 		// Size indicators
 		bytes:          " bytes",

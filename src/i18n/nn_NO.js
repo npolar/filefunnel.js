@@ -9,6 +9,8 @@
 		delete:         "Slett fil",
 		reset:          "Tilbakestill",
 		upload:         "Last opp",
+		previewOpen:    "Maksimér førehandsvisning i nytt vindauge",
+		previewClose:   "Lukk førehandsvisning",
 
 		// Size indicators
 		bytes:          " bytes",
