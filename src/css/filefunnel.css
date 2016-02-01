@@ -7,6 +7,11 @@
 	position:       relative;
 }
 
+.filefunnel [hidden]
+{
+	display:        none !important;
+}
+
 .filefunnel .browse,
 .filefunnel .submit,
 .filefunnel .reset
@@ -55,13 +60,13 @@
 .filefunnel .fileinfo .size,
 .filefunnel .fileinfo .type
 {
-	border:         1px solid #ccc;
 	box-sizing:     border-box;
 	padding:        5px;
 }
 
 .filefunnel .fileinfo .name
 {
+	border:         1px solid #ccc;
 	width:          60%;
 }
 
@@ -73,7 +78,7 @@
 	font-size:      9px;
 	position:       absolute;
 	text-align:     center;
-	width:          40%;
+	width:          calc(40% - 8px);
 }
 
 .filefunnel .fileinfo .size
@@ -92,9 +97,40 @@
 	width:          100%;
 }
 
-.filefunnel .fileinfo .info
+.filefunnel .fileinfo .view
 {
 	display:        inline-block;
+	position:       relative;
+}
+
+.filefunnel .fileinfo .view .close
+{
+	background:     #c99;
+	border-radius:  50%;
+	cursor:         pointer;
+	font-family:    monospace;
+	font-weight:    bold;
+	opacity:        0.3;
+	padding:        0 5px;
+	position:       absolute;
+	right:          0px;
+}
+
+.filefunnel .fileinfo .view .close:hover
+{
+	opacity:        .8;
+}
+
+.filefunnel .fileinfo .view img
+{
+	cursor:         pointer;
+	height:         64px;
+	vertical-align: top;
+}
+
+.filefunnel .fileinfo .info
+{
+	display:        block;
 	font-family:    monospace;
 	font-size:      .8em;
 	margin-top:     8px;
