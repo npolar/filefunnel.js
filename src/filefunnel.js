@@ -328,7 +328,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.80;
+	FileFunnel.VERSION = 0.81;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -336,6 +336,13 @@
 	FileFunnel.prototype = {
 		abort: function() {
 			(this._elements.resetButton && this._elements.resetButton.dom.click());
+		},
+		get auth() {
+			return this._options.auth;
+			return ("string" == typeof this._options.auth ? this._options.auth : null);
+		},
+		set auth(contents) {
+			return (this._options.auth = ("string" == typeof contents ? contents : null));
 		},
 		browse: function() {
 			(this._elements.fileInput && this._elements.fileInput.dom.click());
@@ -839,6 +846,9 @@
 		},
 		get element() {
 			return (this._parent ? this._parent.dom : null);
+		},
+		get headers() {
+			return this._options.headers;
 		},
 		hide: function() {
 			(this._elements.form && (this._elements.form.visible = false));
