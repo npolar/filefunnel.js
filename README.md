@@ -37,6 +37,7 @@ Key               | Value                                                       
 **locale**        | Name of locale (or *null* for browser locale)                 | *null*
 **maxSize**       | Maximum acceptable file byte size (client side)               | *Infinity*
 **multiple**      | Enable support for multiple files                             | *false*
+**preview**       | Enable preview for supported files (currently only images)    | *false*
 **progress**      | Enable progress tracking of non-chunked uploads               | *false*
 **server**        | URI to server backend receiving the uploaded files            | *null*
 
