@@ -146,5 +146,4 @@ Header                               | Value
 **Access-Control-Allow-Origin**      | *(comma-separated list of accepted origin URIs)*
 **Access-Control-Expose-Headers**    | **Content-Location**
 
-Note that the **Access-Control-Allow-Origin**-header can be set to **&#42;** (asterisk) in order to accept *any origin*,
-however, this is **not allowed** for *requests with credentials* (i.e. cookies and/or authorization).
+Note that for requests *without credentials*, the **Access-Control-Allow-Origin**-header can be set to **&#42;** (asterisk) in order to accept *any origin*. However, this is *NOT allowed* for requests *with credentials* (i.e. cookies and/or authentication).
