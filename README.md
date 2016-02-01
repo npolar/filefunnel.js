@@ -23,19 +23,22 @@ new FileFunnel("input[filefunnel]", {
 ```
 
 #### Constructor options:
-Key               | Value                                                       | Default
-------------------|-------------------------------------------------------------|-------------------------
-**accept**        | Comma-separated list of acceptable MIME types (client side) | *&#42;/&#42; (any type)*
-**autoResize**    | Enable automatic widget resizing based on parent width      | *true*
-**chunked**       | Enable chunked uploading                                    | *false*
-**chunkSize**     | Chunk byte size for chunked uploading                       | *1048576 (1 MiB)*
-**className**     | Dot-separated CSS class names added to form                 | *.filefunnel*
-**emptyNames**    | Allow empty file names to be uploaded (client side)         | *false*
-**locale**        | Name of locale (or *null* for browser locale)               | *null*
-**maxSize**       | Maximum acceptable file byte size (client side)             | *Infinity*
-**multiple**      | Enable support for multiple files                           | *false*
-**progress**      | Enable progress tracking of non-chunked uploads             | *false*
-**server**        | URI to server backend receiving the uploaded files          | *null*
+Key               | Value                                                         | Default
+------------------|---------------------------------------------------------------|-------------------------
+**accept**        | Comma-separated list of acceptable MIME types (client side)   | *&#42;/&#42; (any type)*
+**auth**          | Authorization header contents as string (enables credentials) | *null*
+**autoResize**    | Enable automatic widget resizing based on parent width        | *true*
+**chunked**       | Enable chunked uploading                                      | *false*
+**chunkSize**     | Chunk byte size for chunked uploading                         | *1048576 (1 MiB)*
+**className**     | Dot-separated CSS class names added to form                   | *.filefunnel*
+**credentials**   | Enable requests with credentials/cookies                      | *false*
+**emptyNames**    | Allow empty file names to be uploaded (client side)           | *false*
+**headers**       | Map of additional request headers to be set                   | *{ } (no headers)*
+**locale**        | Name of locale (or *null* for browser locale)                 | *null*
+**maxSize**       | Maximum acceptable file byte size (client side)               | *Infinity*
+**multiple**      | Enable support for multiple files                             | *false*
+**progress**      | Enable progress tracking of non-chunked uploads               | *false*
+**server**        | URI to server backend receiving the uploaded files            | *null*
 
 #### Methods:
 Method     | Parameters              | Description
@@ -136,8 +139,12 @@ Status codes in the **3xx**-range are currently not handled by the FileFunnel cl
 
 For *Cross-Origin Resource Sharing* (**CORS**) to work properly, the following headers must be set:
 
-Header                            | Value
-----------------------------------|----------------------------------------------------------
-**Access-Control-Allow-Headers**  | **Authorization, Content-Type, X-File-Name, X-File-Size**
-**Access-Control-Allow-Origin**   | **&#42;** *(or a list of accepted origin URIs)*
-**Access-Control-Expose-Headers** | **Content-Location**
+Header                               | Value
+-------------------------------------|----------------------------------------------------------
+**Access-Control-Allow-Credentials** | **true** *(if requests with credentials are allowed)*
+**Access-Control-Allow-Headers**     | **Authorization, Content-Type, X-File-Name, X-File-Size**
+**Access-Control-Allow-Origin**      | *(comma-separated list of accepted origin URIs)*
+**Access-Control-Expose-Headers**    | **Content-Location**
+
+Note that the **Access-Control-Allow-Origin**-header can be set to **&#42;** (asterisk) in order to accept *any origin*,
+however, this is **not allowed** for *requests with credentials* (i.e. cookies and/or authorization).

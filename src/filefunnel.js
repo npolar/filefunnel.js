@@ -301,15 +301,18 @@
 
 		// Parse and merge options with defaults
 		this._options = Object.assign({
-			accept:     "*/*",          // Comma-separated MIME types
-			autoResize: true,           // Enable automatic widget resizing
-			chunked:    false,          // Enable chunked uploading
-			chunkSize:  0x100000,       // Chunk byte size (1 MiB by default)
-			className:  "filefunnel",   // Dot-separated CSS class names
-			emptyNames: false,          // Allow empty file names
-			maxSize:    Infinity,       // Maximum file size accepted by the client
-			multiple:   false,          // Enable upload of multiple files
-			progress:   false           // Enable progress tracking (for non-chunked upload)
+			accept:         "*/*",          // Comma-separated MIME types
+			autoResize:     true,           // Enable automatic widget resizing
+			auth:           null,           // String with Authorization header contents
+			chunked:        false,          // Enable chunked uploading
+			chunkSize:      0x100000,       // Chunk byte size (1 MiB by default)
+			className:      "filefunnel",   // Dot-separated CSS class names
+			credentials:    false,          // Allow requests with credentials/cookies information
+			emptyNames:     false,          // Allow empty file names
+			headers:        {},             // Additional request headers to be sent
+			maxSize:        Infinity,       // Maximum file size accepted by the client
+			multiple:       false,          // Enable upload of multiple files
+			progress:       false           // Enable progress tracking (for non-chunked upload)
 		}, options);
 
 		// Array of files for upload
@@ -325,7 +328,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = 0.71;
+	FileFunnel.VERSION = 0.80;
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -530,6 +533,15 @@
 				elems.resetButton.value = i18n.cancel;
 				self.status = FileFunnel.status.UPLOADING;
 
+				// Set Authentication if specified
+				if("string" == typeof options.auth) {
+					options.credentials = true;
+
+					options.headers = Object.assign({
+						Authorization: options.auth
+					}, options.headers);
+				}
+
 				// Enable aborting ongoing uploads
 				elems.resetButton.on("click", function(e) {
 					e.preventDefault();
@@ -659,11 +671,18 @@
 								("function" == typeof self._callbacks.error && self._callbacks.error(file));
 							};
 
-							xhr.open("POST", options.server, true);
+							var h, headers = Object.assign({
+								"Content-Type": chunk.type,
+								"X-File-Name": fileName,
+								"X-File-Size": file.bytesTotal
+							}, options.headers);
 
-							xhr.setRequestHeader("Content-Type", chunk.type);
-							xhr.setRequestHeader("X-File-Name", fileName);
-							xhr.setRequestHeader("X-File-Size", file.bytesTotal);
+							xhr.open("POST", options.server, true);
+							xhr.withCredentials = (options.credentials === true);
+
+							for(h in headers) {
+								xhr.setRequestHeader(h, headers[h]);
+							}
 
 							xhr.send(chunk);
 						};
@@ -793,7 +812,15 @@
 						}
 					});
 
+					var h, headers = options.headers;
+
 					xhr.open("POST", options.server, true);
+					xhr.withCredentials = (options.credentials === true);
+
+					for(var h in headers) {
+						xhr.setRequestHeader(h, headers[h]);
+					}
+
 					xhr.send(formData);
 				}
 			};
