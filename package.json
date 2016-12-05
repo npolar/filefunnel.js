@@ -20,11 +20,12 @@
   "license": "MIT",
   "homepage": "https://github.com/npolar/filefunnel.js",
   "devDependencies": {
-    "gulp": "^3.9.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-csso": "^1.0.1",
-    "gulp-jshint": "^1.11.2",
-    "gulp-rename": "^1.2.2",
-    "gulp-uglify": "^1.5.1"
+    "gulp": "*",
+    "gulp-concat": "*",
+    "gulp-csso": "*",
+    "gulp-jshint": "*",
+    "gulp-rename": "*",
+    "gulp-uglify": "*",
+    "jshint": "*"
   }
 }
