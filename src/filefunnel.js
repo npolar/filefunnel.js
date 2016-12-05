@@ -339,7 +339,6 @@
 			(this._elements.resetButton && this._elements.resetButton.dom.click());
 		},
 		get auth() {
-			return this._options.auth;
 			return ("string" == typeof this._options.auth ? this._options.auth : null);
 		},
 		set auth(contents) {
