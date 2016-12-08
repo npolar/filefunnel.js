@@ -329,7 +329,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = "0.10.0";
+	FileFunnel.VERSION = "0.11.0";
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -615,7 +615,7 @@
 
 						var sendNextChunk = function() {
 							var chunk = file.reference.slice(file.bytesSent, Math.min(file.bytesTotal, file.bytesSent + chunkSize) + 1, file.reference.type);
-							var xhr = file.xhr = new XMLHttpRequest(), str, headers;
+							var xhr = file.xhr = new XMLHttpRequest(), headers;
 
 							// Chunked upload start callback
 							xhr.onloadstart = function(e) {
@@ -625,7 +625,7 @@
 								("function" == typeof self._callbacks.start && self._callbacks.start(file));
 							};
 
-							xhr.onreadystatechange = function(e) {
+							xhr.onreadystatechange = function(e, str) {
 								if(xhr.HEADERS_RECEIVED == xhr.readyState) {
 									if((str = xhr.getAllResponseHeaders())) {
 										str.split("\r\n").forEach(function(line) {
@@ -742,7 +742,7 @@
 						sendNextChunk();
 					});
 				} else {
-					var xhr = files.xhr = new XMLHttpRequest(), formData = new FormData(), file, fileInProgress = 0, byteOffset = 0;
+					var xhr = files.xhr = new XMLHttpRequest(), formData = new FormData(), file, fileInProgress = 0, byteOffset = 0, headers = {};
 
 					// Form upload start callback
 					xhr.onloadstart = function(e) {
@@ -755,6 +755,18 @@
 								("function" == typeof self._callbacks.start && self._callbacks.start(file));
 							}
 						});
+					};
+
+					xhr.onreadystatechange = function(e, str) {
+						if(xhr.HEADERS_RECEIVED == xhr.readyState) {
+							if((str = xhr.getAllResponseHeaders())) {
+								str.split("\r\n").forEach(function(line) {
+									if((line = line.match(/\s*([^:]*)\s*:\s*(.*)\s*/))) {
+										headers[line[1]] = line[2];
+									}
+								});
+							}
+						}
 					};
 
 					// Form upload progress callback
@@ -794,6 +806,14 @@
 									file.elements.info.classes.add("success");
 									file.elements.info.value = statusTexts[status] || i18n.success;
 									finalizeUpload(file);
+
+									if(201 == status) {
+										file.response = {
+											headers:	headers || {},
+											text:		xhr.responseText,
+											json:		(headers["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
+										};
+									}
 
 									// Run success callback if defined
 									("function" == typeof self._callbacks.success && self._callbacks.success(file));
