@@ -329,7 +329,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = "0.11.0";
+	FileFunnel.VERSION = "0.12.0";
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -650,6 +650,13 @@
 							xhr.onload = function(e) {
 								var status = e.target.status;
 
+								file.response = {
+									headers:	headers || {},
+									code:		status,
+									text:		xhr.responseText,
+									json:		(headers["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
+								};
+
 								// Success handling
 								if(200 <= status && 300 > status) {
 									file.elements.prog.attribs.set("max", file.bytesTotal).set("value", (file.bytesSent += chunk.size));
@@ -664,14 +671,8 @@
 									file.elements.info.value = i18n.success;
 									finalizeUpload(file);
 
-									// Set file location and response text if status code is 201 (created)
 									if(201 == status) {
 										file.location = xhr.getResponseHeader("Content-Location") || null;
-										file.response = {
-											headers:	headers || {},
-											text:		xhr.responseText,
-											json:		(headers["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
-										};
 									}
 
 									// Run success callback if defined
@@ -799,6 +800,13 @@
 
 						files.forEach(function(file) {
 							if(FileFunnel.status.UPLOADING == file.status) {
+								file.response = {
+									headers:	headers || {},
+									code:		xhr.status,
+									text:		xhr.responseText,
+									json:		(headers["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
+								};
+
 								// Success handling
 								if(200 <= status && 300 > status) {
 									file.status = FileFunnel.status.COMPLETED;
@@ -806,14 +814,6 @@
 									file.elements.info.classes.add("success");
 									file.elements.info.value = statusTexts[status] || i18n.success;
 									finalizeUpload(file);
-
-									if(201 == status) {
-										file.response = {
-											headers:	headers || {},
-											text:		xhr.responseText,
-											json:		(headers["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
-										};
-									}
 
 									// Run success callback if defined
 									("function" == typeof self._callbacks.success && self._callbacks.success(file));
