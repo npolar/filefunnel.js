@@ -34,7 +34,8 @@
 		refused:        "Tilkobling nektet",
 		success:        "Opplasting gjennomført",
 		timeout:        "Opplastingen ble tidsavbrutt",
-		unsupported:    "Filtypen er ikke støttet"
+		unsupported:    "Filtypen er ikke støttet",
+		unprocessable:  "Filen kunne ikke prosesseres av tjeneren"
 	};
 
 	FileFunnel.i18n.no = FileFunnel.i18n.nb = FileFunnel.i18n.nb_NO;

@@ -34,7 +34,8 @@
 		refused:        "Connection refused",
 		success:        "Upload successful",
 		timeout:        "Upload timed out",
-		unsupported:    "Unsupported filetype"
+		unsupported:    "Unsupported filetype",
+		unprocessable:  "File unprocessable by server"
 	};
 
 	FileFunnel.i18n.en = FileFunnel.i18n.en_US;

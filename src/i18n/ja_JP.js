@@ -34,7 +34,8 @@
 		refused:        "接続拒否",
 		success:        "アップロード完成",
 		timeout:        "タイムアウト",
-		unsupported:    "ファイルタイプ非対応"
+		unsupported:    "ファイルタイプ非対応",
+		unprocessable:	"サーバーでファイル処理失敗"
 	};
 
 	FileFunnel.i18n.ja = FileFunnel.i18n.ja_JP;
