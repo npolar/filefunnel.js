@@ -329,7 +329,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = "0.12.0";
+	FileFunnel.VERSION = "0.12.1";
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -370,7 +370,8 @@
 				409: i18n.exists,
 				412: i18n.invalidName,
 				413: i18n.oversized,
-				415: i18n.unsupported
+				415: i18n.unsupported,
+				422: i18n.unprocessable
 			};
 
 			// Disable multi file upload if not explicitly defined in options
@@ -1001,7 +1002,8 @@
 			refused:        "Connection refused",
 			success:        "Upload successful",
 			timeout:        "Upload timed out",
-			unsupported:    "Unsupported filetype"
+			unsupported:    "Unsupported filetype",
+			unprocessable:	"File unprocessable by server"
 		}
 	};
 
