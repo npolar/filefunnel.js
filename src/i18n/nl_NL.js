@@ -32,7 +32,8 @@
 		refused:        "Verbinding geweigerd",
 		success:        "Bestand succesvol geupload",
 		timeout:        "Tijd verstreken",
-		unsupported:    "Niet ondersteund bestandstype"
+		unsupported:    "Dit bestandstype is niet ondersteund",
+		unprocessable:  "De server kan de actie niet uitvoeren"
 	};
 
 	FileFunnel.i18n.nl = FileFunnel.i18n.nl_NL;
