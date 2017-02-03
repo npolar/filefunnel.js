@@ -329,7 +329,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = "0.12.2";
+	FileFunnel.VERSION = "0.12.3";
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -811,6 +811,7 @@
 								// Success handling
 								if(200 <= status && 300 > status) {
 									file.status = FileFunnel.status.COMPLETED;
+									file.bytesSent = file.bytesTotal;
 									file.elements.prog.attribs.set("max", 1).set("value", 1);
 									file.elements.info.classes.add("success");
 									file.elements.info.value = statusTexts[status] || i18n.success;
