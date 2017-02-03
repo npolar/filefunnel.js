@@ -141,7 +141,13 @@
 	color:          #c00;
 }
 
+.filefunnel .fileinfo .info.warning
+{
+	color:		#cc0;
+}
+
 .filefunnel .fileinfo .info.success
 {
 	color:          #060;
 }
+

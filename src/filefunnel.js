@@ -329,7 +329,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = "0.12.3";
+	FileFunnel.VERSION = "0.12.4";
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -529,6 +529,13 @@
 
 						get progress() {
 							return (FileFunnel.status.UPLOADING == this.status ? Math.round((this.bytesSent / this.bytesTotal) * 100) : NaN);
+						},
+
+						reject: function() {
+						    this.elements.info.classes.add("warning");
+						    this.elements.info.classes.remove("error", "success");
+						    this.elements.info.value = i18n.rejected;
+						    this.elements.prog.attribs.set("max", 1).set("value", 1);
 						}
 					}));
 
@@ -1004,6 +1011,7 @@
 			oversized:      "File too big for upload",
 			processing:     "Processing, please wait...",
 			refused:        "Connection refused",
+			rejected:	"File rejected by server",
 			success:        "Upload successful",
 			timeout:        "Upload timed out",
 			unsupported:    "Unsupported filetype",
