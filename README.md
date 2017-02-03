@@ -63,8 +63,47 @@ Event name   | Description
 **abort**    | Triggered when the upload was aborted by the user
 **error**    | Triggered when any errors occur during upload
 **progress** | Triggered when a file upload progresses
+**reset**    | Triggered when the upload form was reset by the user
 **start**    | Triggered when the upload was initialised by the user
 **success**  | Triggered when a file was successfully uploaded
+
+#### Event callback argument:
+With the exception of the **reset** event, all events provide an object with the following properties to the callback function:
+
+Property       | Description
+---------------|------------------------------------------------------------------------------
+**bytesSent**  | Number of total bytes sent to the server
+**bytesTotal** | Total file size in number of bytes
+**elements**   | Map of internally used DOM elements (undocumented)
+**location**   | For individual files, the Content-Location value if present (oterwise *null*)
+**parent**     | Parent FileFunnel instance reference
+**reference**  | Internal [DOM File](https://devdocs.io/dom/file) reference
+**response**   | [Server response object](#server-respones-object))
+**status**     | Current [status](#status-codes) of the file upload
+**xhr**        | The internal XMLHttpRequest element used for upload
+**progerss**   | Percentage of file upload progress as a number
+
+#### Server response object:
+
+Property    | Description
+------------|------------------------------------------------------------------
+**headers** | Map of all HTTP response headers
+**code**    | HTTP response code
+**text**    | HTTP response as plain text
+**json**    | HTTP response as a JSON object (or *null* if not encoded as JSON)
+
+#### Status codes:
+FileFunnel operates with internal status codes to determine the current operation status.
+Both individual files (in the case of chunked upload) and individual FileFunnel instances have their own status code.
+
+Code  | Name          | General description                        | Individual file description
+------|---------------|--------------------------------------------|------------------------------------
+0     | **NONE**      | No files selected for upload               | File not yet ready for upload
+1     | **READY**     | All selected files ready for upload        | File ready for upload
+2     | **UPLOADING** | One or more files currently being uploaded | File currently being uploaded
+3     | **COMPLETED** | All files successfully uploaded            | File successfully uploaded
+4     | **ABORTED**   | Upload process aborted by the user         | File upload process aborted by user
+5     | **FAILED**    | One or more files could not be uploaded    | File upload process failed
 
 #### Locale settings:
 By default, only the **en_GB** locale is included, but all available translations can be enabled by including the [filefunnel-i18n.min.js](https://github.com/npolar/filefunnel.js/tree/master/dist/js/filefunnel-i18n.min.js) file. Unless otherwise specified, the browser locale will be used if the translation exists, otherwise **en_GB** is used as a fallback.
