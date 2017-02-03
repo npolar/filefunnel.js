@@ -329,7 +329,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = "0.12.1";
+	FileFunnel.VERSION = "0.12.2";
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -905,6 +905,9 @@
 				elems.submitButton.enabled = false;
 				elems.resetButton.value = i18n.reset;
 				self.status = FileFunnel.status.NONE;
+
+				// Run reset callback if defined
+				("function" == typeof self._callbacks.reset && self._callbacks.reset());
 			});
 
 			return this;
@@ -931,7 +934,7 @@
 			(events instanceof Array ? events : [ events ])
 			.forEach(function(event) {
 				// Validate event name, or throw exception
-				if(-1 == [ "start", "progress", "success", "abort", "error" ].indexOf(event)) {
+				if(-1 == [ "start", "progress", "success", "abort", "error", "reset" ].indexOf(event)) {
 					throw "Unrecognized FileFunnel event: " + event;
 				}
 
