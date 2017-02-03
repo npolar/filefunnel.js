@@ -78,7 +78,7 @@ Property       | Description
 **location**   | For individual files, the Content-Location value if present (oterwise *null*)
 **parent**     | Parent FileFunnel instance reference
 **reference**  | Internal [DOM File](https://devdocs.io/dom/file) reference
-**response**   | [Server response object](#server-respones-object))
+**response**   | [Server response object](#server-response-object)
 **status**     | Current [status](#status-codes) of the file upload
 **xhr**        | The internal XMLHttpRequest element used for upload
 **progerss**   | Percentage of file upload progress as a number
