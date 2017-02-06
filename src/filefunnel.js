@@ -329,7 +329,7 @@
 		return this.build();
 	}
 
-	FileFunnel.VERSION = "0.12.4";
+	FileFunnel.VERSION = "0.12.5";
 
 	FileFunnel.status = { NONE: 0, READY: 1, UPLOADING: 2, COMPLETED: 3, ABORTED: 4, FAILED: 5 };
 
@@ -623,7 +623,7 @@
 
 						var sendNextChunk = function() {
 							var chunk = file.reference.slice(file.bytesSent, Math.min(file.bytesTotal, file.bytesSent + chunkSize) + 1, file.reference.type);
-							var xhr = file.xhr = new XMLHttpRequest(), headers;
+							var xhr = file.xhr = new XMLHttpRequest(), resHeaders = {};
 
 							// Chunked upload start callback
 							xhr.onloadstart = function(e) {
@@ -638,7 +638,7 @@
 									if((str = xhr.getAllResponseHeaders())) {
 										str.split("\r\n").forEach(function(line) {
 											if((line = line.match(/\s*([^:]*)\s*:\s*(.*)\s*/))) {
-												headers[line[1]] = line[2];
+												resHeaders[line[1]] = line[2];
 											}
 										});
 									}
@@ -659,10 +659,10 @@
 								var status = e.target.status;
 
 								file.response = {
-									headers:	headers || {},
+									headers:	resHeaders,
 									code:		status,
 									text:		xhr.responseText,
-									json:		(headers["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
+									json:		(resHeaders["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
 								};
 
 								// Success handling
@@ -731,7 +731,7 @@
 								("function" == typeof self._callbacks.error && self._callbacks.error(file));
 							};
 
-							var h, headers = Object.assign({
+							var h, reqHeaders = Object.assign({
 								"Content-Type": chunk.type,
 								"X-File-Name": fileName,
 								"X-File-Size": file.bytesTotal
@@ -740,8 +740,8 @@
 							xhr.open("POST", options.server, true);
 							xhr.withCredentials = (options.credentials === true);
 
-							for(h in headers) {
-								xhr.setRequestHeader(h, headers[h]);
+							for(h in reqHeaders) {
+								xhr.setRequestHeader(h, reqHeaders[h]);
 							}
 
 							xhr.send(chunk);
@@ -751,7 +751,7 @@
 						sendNextChunk();
 					});
 				} else {
-					var xhr = files.xhr = new XMLHttpRequest(), formData = new FormData(), file, fileInProgress = 0, byteOffset = 0, headers = {};
+					var xhr = files.xhr = new XMLHttpRequest(), formData = new FormData(), file, fileInProgress = 0, byteOffset = 0, resHeaders = {};
 
 					// Form upload start callback
 					xhr.onloadstart = function(e) {
@@ -771,7 +771,7 @@
 							if((str = xhr.getAllResponseHeaders())) {
 								str.split("\r\n").forEach(function(line) {
 									if((line = line.match(/\s*([^:]*)\s*:\s*(.*)\s*/))) {
-										headers[line[1]] = line[2];
+										resHeaders[line[1]] = line[2];
 									}
 								});
 							}
@@ -809,10 +809,10 @@
 						files.forEach(function(file) {
 							if(FileFunnel.status.UPLOADING == file.status) {
 								file.response = {
-									headers:	headers || {},
+									headers:	resHeaders,
 									code:		xhr.status,
 									text:		xhr.responseText,
-									json:		(headers["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
+									json:		(resHeaders["Content-Type"] || "").match(/\/(?:json|.+\+json)(?:$|;)/) ? JSON.parse(xhr.responseText) : null
 								};
 
 								// Success handling
@@ -892,13 +892,13 @@
 						}
 					});
 
-					var h, headers = options.headers;
+					var h, reqHeaders = options.headers;
 
 					xhr.open("POST", options.server, true);
 					xhr.withCredentials = (options.credentials === true);
 
-					for(var h in headers) {
-						xhr.setRequestHeader(h, headers[h]);
+					for(h in reqHeaders) {
+						xhr.setRequestHeader(h, reqHeaders[h]);
 					}
 
 					xhr.send(formData);
@@ -1029,3 +1029,4 @@
 
 	return FileFunnel;
 }());
+
