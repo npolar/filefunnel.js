@@ -32,6 +32,7 @@
 		oversized:      "Fila er for stor for opplasting",
 		processing:     "Prosesserar, vennlegst vent...",
 		refused:        "Tilkobling nekta",
+		rejected:	"Fila blei avvist av tenaren",
 		success:        "Opplasting gjennomført",
 		timeout:        "Opplastinga blei tidsavbrote",
 		unsupported:    "Filtypen er ikkje støtta",
@@ -40,3 +41,4 @@
 
 	FileFunnel.i18n.nn = FileFunnel.i18n.nn_NO;
 })();
+

@@ -32,6 +32,7 @@
 		oversized:      "Filen er for stor for opplasting",
 		processing:     "Prosesserer, vennligst vent...",
 		refused:        "Tilkobling nektet",
+		rejected:	"Filen ble avvist av tjeneren",
 		success:        "Opplasting gjennomført",
 		timeout:        "Opplastingen ble tidsavbrutt",
 		unsupported:    "Filtypen er ikke støttet",
@@ -40,3 +41,4 @@
 
 	FileFunnel.i18n.no = FileFunnel.i18n.nb = FileFunnel.i18n.nb_NO;
 })();
+

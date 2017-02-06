@@ -30,6 +30,7 @@
 		oversized:      "Bestand is te groot",
 		processing:     "Verwerking, even geduld...",
 		refused:        "Verbinding geweigerd",
+		rejected:       "[File rejected by server]",
 		success:        "Bestand succesvol geupload",
 		timeout:        "Tijd verstreken",
 		unsupported:    "Niet ondersteund bestandstype"
@@ -37,3 +38,4 @@
 
 	FileFunnel.i18n.nl = FileFunnel.i18n.nl_NL;
 })();
+
